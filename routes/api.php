@@ -19,4 +19,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post("buscar-establecimientos", [EstablecimientoController::class, "buscarEstablecimientos"]);
+Route::get("buscar-establecimientos", [EstablecimientoController::class, "buscarEstablecimientos"]);
+Route::get("establecimientos/{establecimiento}", [EstablecimientoController::class, "verEstablecimiento"]);

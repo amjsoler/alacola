@@ -17,4 +17,9 @@ class EstablecimientoController extends Controller
 
         return response($resultadosBusqueda);
     }
+
+    public function verEstablecimiento(Establecimiento $establecimiento)
+    {
+        return response($establecimiento);
+    }
 }
