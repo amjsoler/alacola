@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiAuthentication;
 use App\Http\Controllers\EstablecimientoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,8 +16,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+//rutas de autenticación
+Route::post("/login", [ApiAuthentication::class, "login"]);
+Route::post("/register", [ApiAuthentication::class, "register"]);
+
+Route::group(["middleware" => "auth:sanctum"], function(){
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 });
 
 Route::get("buscar-establecimientos", [EstablecimientoController::class, "buscarEstablecimientos"]);
