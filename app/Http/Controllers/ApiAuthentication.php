@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Psr\Log\LogLevel;
 
 class ApiAuthentication extends Controller
 {
@@ -37,6 +38,7 @@ class ApiAuthentication extends Controller
     public function register(Request $request)
     {
         try{
+            //TODO: Comprobar en el validador si el email ya está registrado
             $request->validate([
                 "name" => "required|max:100",
                 "email" => "required|email",
@@ -48,7 +50,7 @@ class ApiAuthentication extends Controller
                 return response()->json([
                     "message" => "El correo ya está registrado",
                     "errors" => [
-                        "email" => "El correo ya está registrado"
+                        "email" => ["El correo ya está registrado"]
                     ]
                 ], 422);
             }
@@ -59,7 +61,19 @@ class ApiAuthentication extends Controller
             $user->email = $request->get("email");
             $user->password = Hash::make($request->get("password"));
 
-            if(!$user->save()){
+            if($user->save()){
+                //Inicio de sesión de usuario y devuelvo el token dentro del user
+                $inicioSesion = Auth::attempt(['email' => $user->email, 'password' => $request->get("password")], true);
+
+                if($inicioSesion){
+                    $token = $user->createToken("authToken")->plainTextToken;
+                    $user["access_token"] = $token;
+                }
+
+                Log::log(LogLevel::DEBUG, "Respuesta de attempt login tras registro", [$inicioSesion]);
+
+                //TODO: Enviar una notificación/correo con el link de verificación
+
                 return response()->json($user, 200);
             }else{
                 throw new ApiAuthenticationRegisterError("Error al guardar los registros del nuevo usuario");

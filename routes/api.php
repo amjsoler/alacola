@@ -26,5 +26,7 @@ Route::group(["middleware" => "auth:sanctum"], function(){
     });
 });
 
+//TODO: Configurar endpoint para ir limpiando los personal token de sesión (tarea cron)
+
 Route::get("buscar-establecimientos", [EstablecimientoController::class, "buscarEstablecimientos"]);
 Route::get("establecimientos/{establecimiento}", [EstablecimientoController::class, "verEstablecimiento"]);
