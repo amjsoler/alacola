@@ -20,6 +20,7 @@ class EstablecimientoFavoritoController extends Controller
      * -11: Excepción
      * -12: Error al leer los establecimientos en la parte del modelo
      */
+    //TODO
     public function establecimientosFavoritos()
     {
         $response = [
@@ -86,6 +87,7 @@ class EstablecimientoFavoritoController extends Controller
      * -12: El usuario ya tenía almacenado en me gustas el establecimiento
      * -13: Error al guardar el establecimiento como favorito
      */
+    //TODO
     public function meGustaElEstablecimiento(Establecimiento $establecimiento)
     {
         $response = [
@@ -182,6 +184,7 @@ class EstablecimientoFavoritoController extends Controller
      * -12: El usuario no tenía como favorita la empresa
      * -13: Error en el metodo de modelo de eliminación
      */
+    //TODO
     public function yaNoMeGustaElEstablecimiento(Establecimiento $establecimiento)
     {
         $response = [
@@ -263,7 +266,7 @@ class EstablecimientoFavoritoController extends Controller
 
         return response()->json(
             $response["data"],
-            $response["code"]
+            $response["status"]
         );
     }
 }

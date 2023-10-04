@@ -51,7 +51,7 @@ class EstablecimientoFavorito extends Model
      *
      * @param User $usuario El usuario
      *
-     * @return string[] Colección de establecimientos gustados
+     * @return EstablecimientoFavorito[] Colección de establecimientoFavorito
      *   0: OK
      *  -1: Excepción
      */
@@ -71,9 +71,8 @@ class EstablecimientoFavorito extends Model
             );
 
             $establecimientosFavoritos = $usuario->establecimientosGustados()
-                ->with("establecimiento")
-                ->withWhereHas("establecimiento.usuariosEncolados", function($q){
-                    $q->where("activo", 1);
+                ->with("establecimiento", function($query){
+                    $query->withCount("usuariosEncolados");
                 })
                 ->get();
 

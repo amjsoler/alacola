@@ -12,6 +12,7 @@ use Psr\Log\LogLevel;
 
 class ApiAuthentication extends Controller
 {
+    //TODO
     public function login(Request $request)
     {
         $request->validate([
@@ -35,6 +36,7 @@ class ApiAuthentication extends Controller
         ]);
     }
 
+    //TODO
     public function register(Request $request)
     {
         try{

@@ -20,22 +20,39 @@ class Establecimiento extends Model
 
     protected $primaryKey = "id";
 
+    protected $table = "establecimientos";
+
     /*
      * //////////
      * RELACIONES
      * //////////
      */
-    //Usuario que administra este establecimiento
+
+    /**
+     * Devuelve el administrador del establecimiento
+     *
+     * @return BelongsTo User
+     */
     public function administrador() : BelongsTo
     {
         return $this->belongsTo(User::class, "usuario_administrador", "id");
     }
 
+    /**
+     * Devuelve los usuarios encolados
+     *
+     * @return HasMany UsuarioEnCola[]
+     */
     public function usuariosEncolados() : HasMany
     {
         return $this->hasMany(UsuarioEnCola::class, "establecimiento_cola", "id");
     }
 
+    /**
+     * Devuelve una lista de EstablecimeintoFavorito de este establecimeinto
+     *
+     * @return HasMany EstablecimientoFavorito[]
+     */
     public function establecimientoGustado() : HasMany
     {
         return $this->hasMany(EstablecimientoFavorito::class, "establecimiento_id", "id");
@@ -47,61 +64,62 @@ class Establecimiento extends Model
      * //////////
      */
 
+    /**
+     * Devuelve una lista de establecimientos dado un usuario
+     *
+     * @param User $user El usuario
+     *
+     * @return Establecimiento[]
+     */
     public static function dameMisEstablecimientos(User $user)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al dameMisEstablecimientos del Establecimiento",
-                compact("user")
+            Log::debug("Entrando al dameMisEstablecimientos del Establecimiento",
+                array(
+                    "userID: " => $user->id
+                )
             );
 
             $establecimientos = $user->establecimientosAdministrados()
-                ->with("usuariosEncolados", function($query){
-                    $query->where("activo", 1);
-                })
+                ->withCount("usuariosEncolados")
                 ->get();
 
             if($establecimientos != null){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $establecimientos;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
 
                 Log::error("Error al buscar los establecimientos en dameMisEstablecimientos del modelo Establecimiento",
-                    compact("user")
+                    array(
+                        "userID: " => $user->id
+                    )
                 );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de dameMisEstablecimientos del Establecimiento model",
                 array(
-                    "params: " => compact("user"),
-                    "response:" => $response
+                    "userID: " => $user->id,
+                    "response: " => $response
                 )
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
-                    "params: " => compact("user"),
-                    "response:" => $response
+                    "userID: " => $user->id,
+                    "response: " => $response
                 )
             );
         }
@@ -111,10 +129,11 @@ class Establecimiento extends Model
 
     /**
      * Devuelve los establecimientos que casen con la busqueda realizada
+     * Incluye un count de los usuariosEnCola relacionados
      *
      * @param string $cadenaBusqueda La cadena a buscar
      *
-     * @return string[]
+     * @return Establecimiento[] Incluye un count de los usuariosEnCola relacionados
      *   0: OK
      *  -1: Excepcion
      *  -2: Error al buscar la cadena
@@ -122,36 +141,28 @@ class Establecimiento extends Model
     public static function buscarEstablecimiento(string $cadenaBusqueda)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al buscarEstablecimiento del Establecimiento",
+            Log::debug("Entrando al buscarEstablecimiento del Establecimiento",
                 compact("cadenaBusqueda")
             );
 
             $establecimientos = Establecimiento::where("nombre", "like", "%".$cadenaBusqueda."%")
                 ->orwhere("direccion", "like", "%".$cadenaBusqueda."%")
                 ->orwhere("descripcion", "like", "%".$cadenaBusqueda."%")
-                ->with("usuariosEncolados", function($query){
-                    $query->where("activo", 1);
-                })
+                ->withCount("usuariosEncolados")
                 ->get();
 
             if($establecimientos != null){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $establecimientos;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
 
                 Log::error("Error al buscar el establecimiento en buscarEstablecimiento del modelo Establecimiento",
                     compact("cadenaBusqueda")
@@ -159,22 +170,20 @@ class Establecimiento extends Model
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de buscarEstablecimiento del Establecimiento model",
                 array(
-                    "params: " => compact("cadenaBusqueda"),
-                    "response:" => $response
+                    "request: " => compact("cadenaBusqueda"),
+                    "response: " => $response
                 )
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
-                    "params: " => compact("cadenaBusqueda"),
+                    "request: " => compact("cadenaBusqueda"),
                     "response:" => $response
                 )
             );
@@ -183,19 +192,27 @@ class Establecimiento extends Model
         return $response;
     }
 
+    /**
+     * Pasada una latitud y longitud devuelve los establecimientos cercanos (10km TODO: Esto se parametrizará en el futuro)
+     *
+     * @param string $latitud La latitud
+     * @param string $longitud La longitud
+     *
+     * @return Establecimiento[]
+     */
     public static function buscarEstablecimientosCercanos(string $latitud, string $longitud)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al buscarEstablecimientosCercanos del Establecimiento",
-                compact("latitud", "longitud")
+            Log::debug("Entrando al buscarEstablecimientosCercanos del Establecimiento",
+                array(
+                    "request: " => compact("latitud", "longitud")
+                )
             );
 
             $idEstablecimientos = DB::select("select id, ( 6371 * acos(cos(radians($latitud)) * cos(radians(latitud)) * cos(radians(longitud) - radians($longitud)) + sin(radians($latitud)) * sin(radians(latitud)))) AS distancia from establecimientos having distancia < 10 order by distancia");
@@ -207,43 +224,42 @@ class Establecimiento extends Model
                 $cadenaids .= $establecimiento->id . ",";
             }
 
-            $establecimientos = Establecimiento::with("usuariosEncolados", function($query){
-                $query->where("activo", 1);
-            })
+            $establecimientos = Establecimiento::withCount("usuariosEncolados")
             ->whereIn("id", explode(",", $cadenaids))
             ->get();
 
             if($establecimientos){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $establecimientos;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
 
                 Log::error("Error al crear el buscarEstablecimientosCercanos en crearEstablecimiento del modelo Establecimiento",
-                    compact("latitud", "longitud")
+                    array(
+                        "request: " => compact("latitud", "longitud"),
+                        "response: " => $response
+                    )
                 );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de buscarEstablecimientosCercanos del Establecimiento model",
                 array(
                     "request: " => compact("latitud", "longitud"),
-                    "response:" => $response
-                ));
+                    "response: " => $response
+                )
+            );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
-                compact("latitud", "longitud")
+                array(
+                    "request: " => compact("latitud", "longitud"),
+                    "response: " => $response
+                )
             );
         }
 
@@ -253,29 +269,37 @@ class Establecimiento extends Model
     /**
      * Crea un nuevo establecimiento y lo devuelve en la estructura típica de respuesta
      *
-     * @param $nombre El nombre del nuevo establecimiento
-     * @param $direccion La dirección del nuevo establecimiento
-     * @param $descripcion La descripción del nuevo establecimiento
-     * @param $usuarioAdmin El usuario que crea el nuevo establecimiento y el que será admin del mismo
+     * @param string $nombre El nombre del establecimiento
+     * @param string|null $direccion La dirección del establecimiento
+     * @param string|null $descripcion La descripción del establecimiento
+     * @param int $usuarioAdmin El fundador del establecimiento
+     * @param string|null $latitud Latitud de la posición del establecimiento
+     * @param string|null $longitud Longitud de la posición del establecimiento
      *
-     * @return string[] Estructura de respuesta típica con el nuevo establecimiento en el data
+     * @return Establecimiento Devuelve el establecimiento si lo ha conseguido crear
      *   0: OK
      *  -1: Excepción
      *  -2: Error al almacenar el establecimiento
      */
-    public static function crearEstablecimiento(string $nombre, string $direccion=null, string $descripcion=null, int $usuarioAdmin, string $latitud=null, string $longitud=null)
+    public static function crearEstablecimiento(
+        string $nombre,
+        string $direccion=null,
+        string $descripcion=null,
+        int $usuarioAdmin,
+        string $latitud=null,
+        string $longitud=null)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al crearEstablecimiento del Establecimiento",
-                compact("nombre", "direccion", "descripcion", "usuarioAdmin", "latitud", "longitud")
+            Log::debug("Entrando al crearEstablecimiento del Establecimiento",
+                array(
+                    "request: " => compact("nombre", "direccion", "descripcion", "usuarioAdmin", "latitud", "longitud")
+                )
             );
 
             $establecimientoAux = new Establecimiento();
@@ -287,36 +311,37 @@ class Establecimiento extends Model
             $establecimientoAux->longitud = $longitud;
 
             if($establecimientoAux->save()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $establecimientoAux;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
 
                 Log::error("Error al crear el establecimiento en crearEstablecimiento del modelo Establecimiento",
-                    compact("nombre", "direccion", "descripcion", "usuarioAdmin")
+                    array(
+                        "request: " => compact("nombre", "direccion", "descripcion", "usuarioAdmin", "latitud", "longitud"),
+                        "response: " => $response
+                    )
                 );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de crearEstablecimiento del Establecimiento model",
                 array(
-                    "params: " => compact("nombre", "direccion", "descripcion", "usuarioAdmin"),
-                    "response:" => $response
-                ));
+                    "request: " => compact("nombre", "direccion", "descripcion", "usuarioAdmin", "latitud", "longitud"),
+                    "response: " => $response
+                )
+            );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
-                compact("nombre", "direccion", "descripcion", "usuarioAdmin")
+                array(
+                    "request: " => compact("nombre", "direccion", "descripcion", "usuarioAdmin", "latitud", "longitud"),
+                    "response: " => $response
+                )
             );
         }
 
@@ -324,65 +349,68 @@ class Establecimiento extends Model
     }
 
     /**
-     * //Función que almacena el nombre del logo del establecimiento
+     * //Función que almacena la ruta del logo del establecimiento
      *
-     * @param string $nombreLogo El nombre del logo con extensión
-     * @param int $establecimientoID El establecimiento al que asociar el logo
+     * @param string $rutaLogo La ruta del logo almacenado
+     * @param int $establecimientoID El establecimiento al que asociaremos el logo
      *
-     * @return string[] //Estructura típica de respuesta
+     * @return Bool si se ha podido guardar la ruta o no
      *   0: OK
      *  -1: Excepción
      *  -2: Error al almacenar el logo del establecimiento en BD
      */
-    public static function almacenarLogoEstablecimientoEnBD(string $nombreLogo, int $establecimientoID)
+    public static function almacenarLogoEstablecimientoEnBD(string $rutaLogo, int $establecimientoID)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al almacenarLogoEstablecimientoEnBD del Establecimiento",
-                compact("nombreLogo", "establecimientoID")
+            Log::debug("Entrando al almacenarLogoEstablecimientoEnBD del Establecimiento",
+                array(
+                    "request: " => compact("rutaLogo", "establecimientoID")
+                )
             );
 
             $establecimientoAux = Establecimiento::find($establecimientoID);
-            $establecimientoAux->logo = $nombreLogo;
+            $establecimientoAux->logo = $rutaLogo;
 
             if($establecimientoAux->save()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
-                $response["data"] = $establecimientoAux;
+                $response["data"] = true;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
+                $response["data"] = false;
 
                 Log::error("Error al almacenar el nombre del nuevo logo en almacenarUserLogoEnBD del modelo Establecimiento",
-                    compact("nombreLogo", "establecimientoID")
+                    array(
+                        "request: " => compact("rutaLogo", "establecimientoID"),
+                        "response: " => $response
+                    )
                 );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de almacenarLogoEstablecimientoEnBD del Establecimiento model",
                 array(
-                    "params: " => compact("nombreLogo", "establecimientoID"),
-                    "response:" => $response
-                ));
+                    "request: " => compact("rutaLogo", "establecimientoID"),
+                    "response: " => $response
+                )
+            );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
+            $response["data"] = false;
 
             Log::error($e->getMessage(),
-                compact("nombreLogo", "establecimientoID")
+                array(
+                    "request: " => compact("rutaLogo", "establecimientoID"),
+                    "response: " => $response
+                )
             );
         }
 
@@ -396,30 +424,32 @@ class Establecimiento extends Model
      * @param string $nombre Nuevo nombre
      * @param string $direccion Nueva dirección
      * @param string $descripcion Nueva descripción
+     * @param string $latitud La nueva latitud del establecimiento
+     * @param string $longitud La nueva longitud del establecimiento
      *
-     * @return string[] Respuesta
-     *
+     * @return Establecimiento El establecimiento con los valores modificados
      *   0: OK
      *  -1: Excepción
      *  -2: No se ha podido guardar/actualizar el establecimiento
      */
-    public static function updateEstablecimiento(Establecimiento $establecimiento, string $nombre, string $direccion=null, string $descripcion=null, string $latitud=null, string $longitud=null)
+    public static function updateEstablecimiento(
+        Establecimiento $establecimiento,
+        string $nombre,
+        string $direccion=null,
+        string $descripcion=null,
+        string $latitud=null,
+        string $longitud=null)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al updateEstablecimiento del Establecimiento",
-                compact(
-                    "establecimiento",
-                    "nombre",
-                    "direccion",
-                    "descripcion"
+            Log::debug("Entrando al updateEstablecimiento del Establecimiento",
+                array(
+                    "request: " => compact("establecimiento", "nombre", "direccion", "descripcion", "latitud", "longitud")
                 )
             );
 
@@ -430,50 +460,36 @@ class Establecimiento extends Model
             $establecimiento->longitud = $longitud;
 
             if($establecimiento->save()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $establecimiento;
             }
             else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
 
                 Log::error("Error al modificar los datos del establecimiento",
-                    compact(
-                        "establecimiento",
-                        "nombre",
-                        "direccion",
-                        "descripcion"
+                    array(
+                        "request: " => compact("establecimiento", "nombre", "direccion", "descripcion", "latitud", "longitud"),
+                        "response: " => $response
                     )
                 );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo de updateEstablecimiento del Establecimiento model",
                 array(
-                    "params: " => compact(
-                        "establecimiento",
-                        "nombre",
-                        "direccion",
-                        "descripcion"
-                    ),
-                    "response:" => $response
-                ));
+                    "request: " => compact("establecimiento", "nombre", "direccion", "descripcion", "latitud", "longitud"),
+                    "response: " => $response
+                )
+            );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
-                compact(
-                    "establecimiento",
-                    "nombre",
-                    "direccion",
-                    "descripcion"
+                array(
+                    "request: " => compact("establecimiento", "nombre", "direccion", "descripcion", "latitud", "longitud"),
+                    "response: " => $response
                 )
             );
         }
@@ -486,7 +502,7 @@ class Establecimiento extends Model
      *
      * @param Establecimiento $establecimiento El establecimiento
      *
-     * @return UsuarioEnCola [] Array de usuario en cola
+     * @return UsuarioEnCola+User{id,name}[] Array de usuario en cola
      *   0: OK
      *  -1: Excepción
      *  -2: Error al leer los usuarios encolados
@@ -494,44 +510,43 @@ class Establecimiento extends Model
     public static function dameUsuariosEncolados(Establecimiento $establecimiento)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al dameUsuariosEncolados del Establecimiento",
-                compact("establecimiento")
+            Log::debug("Entrando al dameUsuariosEncolados del Establecimiento",
+                array(
+                    "request: " => compact("establecimiento")
+                )
             );
 
             $usuariosEncolados = $establecimiento->usuariosEncolados()
                 ->with("usuario:id,name")
-                ->where("activo", 1)
                 ->orderBy("momentoestimado", "asc")
                 ->get();
 
-            $response["status"] = 200;
             $response["code"] = 0;
-            $response["message"] = "OK";
             $response["data"] = $usuariosEncolados;
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del dameUsuariosEncolados del Establecimiento model",
                 array(
-                    "params: " => compact("establecimiento"),
-                    "response:" => $response
-                ));
+                    "request: " => compact("establecimiento"),
+                    "response: " => $response
+                )
+            );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
-                compact("establecimiento")
+                array(
+                    "request: " => compact("establecimiento"),
+                    "response: " => $response
+                )
             );
         }
 
@@ -543,7 +558,7 @@ class Establecimiento extends Model
      *
      * @param Establecimiento $establecimiento El establecimiento
      *
-     * @return array[]
+     * @return void
      *   0: OK
      *  -1: Excepción
      *  -2: Error al realizar la acción de borrado
@@ -551,30 +566,25 @@ class Establecimiento extends Model
     public static function eliminarEstablecimiento(Establecimiento $establecimiento)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
-            "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al eliminarEstablecimiento del Establecimiento",
-                compact("establecimiento")
+            Log::debug("Entrando al eliminarEstablecimiento del Establecimiento",
+                array(
+                    "request: " => compact("establecimiento")
+                )
             );
 
             if($establecimiento->delete()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
             }else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del eliminarEstablecimiento del Establecimiento model",
                 array(
                     "request: " => compact("establecimiento"),
@@ -583,9 +593,7 @@ class Establecimiento extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -605,24 +613,21 @@ class Establecimiento extends Model
      * @param int $usuarioID El usuario a comprobar
      * @param Establecimiento $establecimiento El establecimiento
      *
-     * @return string[]
+     * @return Bool Si está encolado o no
      *   0: OK
      *  -1: Excepción
      */
     public static function comprobarUsuarioEnCola(int $usuarioID, Establecimiento $establecimiento)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al comprobarUsuarioEnCola del Establecimiento",
+            Log::debug("Entrando al comprobarUsuarioEnCola del Establecimiento",
                 array(
-                    "usuarioID: " => $usuarioID,
                     "request: " => compact("usuarioID", "establecimiento"),
                 )
             );
@@ -630,40 +635,31 @@ class Establecimiento extends Model
             //Acción
             $usuarioEnCola = $establecimiento->usuariosEncolados()
                 ->where("usuario_en_cola", $usuarioID)
-                ->where("activo", true)
                 ->get();
 
             if($usuarioEnCola->count() > 0){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = true;
             }else{
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = false;
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del comprobarUsuarioEnCola del Establecimiento model",
                 array(
-                    "usuarioID: " => $usuarioID,
                     "request: " => compact("usuarioID", "establecimiento"),
                     "response: " => $response
                 )
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
                 array(
-                    "usuarioID: " => $usuarioID,
                     "request: " => compact("usuarioID", "establecimiento"),
                     "response: " => $response
                 )

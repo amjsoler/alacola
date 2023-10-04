@@ -21,7 +21,7 @@ class EstablecimientoPolicy
     public function update(User $user, Establecimiento $establecimiento) : Response
     {
         try {
-            Log::info(
+            Log::debug(
                 "Entrando al update del EstablecimientoPolicy",
                 array(
                     "userID: " => $user->id,
@@ -33,7 +33,7 @@ class EstablecimientoPolicy
             if($establecimiento->usuario_administrador == $user->id){
                 $response = Response::allow();
 
-                Log::info(
+                Log::debug(
                     "Saliendo del update del EstablecimientoPolicy: Status OK",
                     array(
                         "userID: " => $user->id,
@@ -43,7 +43,7 @@ class EstablecimientoPolicy
             }else{
                 $response = Response::deny();
 
-                Log::info(
+                Log::debug(
                     "Saliendo del update del EstablecimientoPolicy: Status KO",
                     array(
                         "userID: " => $user->id,
@@ -77,28 +77,28 @@ class EstablecimientoPolicy
     public function delete(User $user, Establecimiento $establecimiento) : Response
     {
         try {
-            Log::info(
+            Log::debug(
                 "Entrando al delete del EstablecimientoPolicy",
-                array("userID: " => $user, "establecimiento: " => $establecimiento));
+                array("userID: " => $user->id, "establecimiento: " => $establecimiento));
 
             //Si el usuario es el administrador del establecimiento, entonces sí puede eliminar
             if($establecimiento->usuario_administrador == $user->id){
                 $response = Response::allow();
 
-                Log::info(
+                Log::debug(
                     "Saliendo del delete del EstablecimientoPolicy: Status OK",
-                    array("userID: " => $user, "establecimiento: " => $establecimiento));
+                    array("userID: " => $user->id, "establecimiento: " => $establecimiento));
             }else{
                 $response = Response::deny();
 
-                Log::info(
+                Log::debug(
                     "Saliendo del delete del EstablecimientoPolicy: Status KO",
-                    array("userID: " => $user, "establecimiento: " => $establecimiento));
+                    array("userID: " => $user->id, "establecimiento: " => $establecimiento));
             }
         }catch(Exception $e){
             Log::error(
                 $e->getMessage(),
-                array("userID: " => $user, "establecimiento: " => $establecimiento));
+                array("userID: " => $user->id, "establecimiento: " => $establecimiento));
 
             $response = Response::deny();
         }
@@ -114,37 +114,49 @@ class EstablecimientoPolicy
      *
      * @return bool Si es admin o no
      */
-    public function herramientasAdmin(User $usuario, Establecimiento $establecimiento) : bool
+    public function herramientasAdminEstablecimiento(User $usuario, Establecimiento $establecimiento) : Response
     {
         try {
-            Log::info(
-                "Entrando al herramientasAdmin del EstablecimientoPolicy",
-                compact("usuario", "establecimiento")
+            Log::debug(
+                "Entrando al herramientasAdminEstablecimiento del EstablecimientoPolicy",
+                array(
+                    "userID: " => $usuario->id,
+                    "establecimiento: " => $establecimiento
+                )
             );
 
             //Si el usuario es el administrador del establecimiento, entonces sí puede eliminar
             if($establecimiento->usuario_administrador == $usuario->id){
-                $response = true;
+                $response = Response::allow();
 
-                Log::info(
-                    "Saliendo del herramientasAdmin del EstablecimientoPolicy: Status OK",
-                    compact("usuario", "establecimiento")
+                Log::debug(
+                    "Saliendo del herramientasAdminEstablecimiento del EstablecimientoPolicy: Status OK",
+                    array(
+                        "userID: " => $usuario->id,
+                        "establecimiento: " => $establecimiento
+                    )
                 );
             }else{
-                $response = false;
+                $response = Response::deny();
 
-                Log::info(
+                Log::debug(
                     "Saliendo del herramientasAdmin del EstablecimientoPolicy: Status KO",
-                    compact("usuario", "establecimiento")
+                    array(
+                        "userID: " => $usuario->id,
+                        "establecimiento: " => $establecimiento
+                    )
                 );
             }
         }catch(Exception $e){
             Log::error(
                 $e->getMessage(),
-                compact("usuario", "establecimiento")
+                array(
+                    "userID: " => $usuario->id,
+                    "establecimiento: " => $establecimiento
+                )
             );
 
-            $response = false;
+            $response = Response::deny();
         }
 
         return $response;

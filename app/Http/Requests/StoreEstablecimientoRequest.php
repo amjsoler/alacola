@@ -66,10 +66,12 @@ class StoreEstablecimientoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|max:100',
-            'logo' => 'mimes:jpg,jpeg,png',
-            'direccion' => 'max:250',
-            "descripcion" => 'max:5000'
+            'nombre' => 'required|string|max:100',
+            'logo' =>'image|mimes:jpg,png,jpeg|max:2048|max_width=2048,max_height=2048',
+            'direccion' => 'string|max:256',
+            'descripcion' => 'string|max:5000',
+            'latitud' => 'string|max:100',
+            'longitud' => 'string|max:100'
         ];
     }
 
@@ -81,13 +83,34 @@ class StoreEstablecimientoRequest extends FormRequest
     public function messages()
     {
         return [
-            'nombre.required' => __("establecimientos.validaciones.storenombrerequired"),
-            'nombre.max' => __("establecimientos.validaciones.storenombremax"),
-            'logo.mimes' => __("establecimientos.validaciones.storelogoimage"),
-            'logo.max' => __("establecimientos.validaciones.storelogomax"),
-            'logo.dimensions' => __("establecimientos.validaciones.storelogodimensions"),
-            'direccion.max' => __("establecimientos.validaciones.storedireccionmax"),
-            "descripcion.max" => __("establecimientos.validaciones.storedescripcionmax"),
+            'nombre' => [
+                'required' => "Debes especificar un nombre de usuario",
+                "string" => "el nombre especificado no es válido ¿Contiene caracteres extraños?",
+                "max" => "El nombre no puede superar los 100 caracteres"
+            ],
+            'logo' => [
+                "image" => "El archivo debe ser una imagen",
+                "mimes" => "El formato de imagen ha de ser JPG, JPEG o PNG",
+                "max" => "La imagen no puede superer los 2MB",
+                "max_width" => "El ancho de la imagen no puede ser mayor a 2048px",
+                "max_height" => "El alto de la imagen no puede ser mayor a 2048px",
+            ],
+            'direccion' => [
+                "string" => "La dirección no es válida ¿Contiene caracteres extraños?",
+                "max" => "La dirección no puede superar los 256 caracteres"
+            ],
+            "descripcion" => [
+                "string" => "La descripción no es válida ¿Contiene caracteres extraños?",
+                "max" => "La descripción no puede superar los 5000 caracteres"
+            ],
+            "latitud" => [
+                "string" => "La latitud debe ser una cadena válida ¿Contiene caracteres extraños?",
+                "max" => "La latitud no puede superar los 100 caracteres"
+            ],
+            "longitud" => [
+                "string" => "La longitud debe ser una cadena válida ¿Contiene caracteres extraños?",
+                "max" => "La longitud no puede superar los 100 caracteres"
+            ]
         ];
     }
 }

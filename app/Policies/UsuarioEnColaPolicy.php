@@ -4,69 +4,63 @@ namespace App\Policies;
 
 use App\Models\Establecimiento;
 use App\Models\User;
-use App\Models\UsuarioEnCola;
 use Exception;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Log;
 
 class UsuarioEnColaPolicy
 {
     /**
-     * Create a new policy instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Función para ver si un usuario puede desapuntar a un usuario del establecimiento pasado como param
+     * Policy que determina si un usuario puede pasasr turno en un establecimiento
      *
-     * @param Establecimiento $establecimiento El establecimiento
-     * @param UsuarioEnCola $usuarioEnCola El usuario a desencolar
+     * @param User $user El usuario que inicia la acción
+     * @param Establecimiento $establecimiento El establecimiento sobre el que se pretende pasar turno
      *
-     * @return bool Si puede realizar la acción o no
+     * @return Response
      */
-    public function adminDesapuntaUser(User $user, UsuarioEnCola $usuarioEnCola, Establecimiento $establecimiento)
+    public function delete(User $user, Establecimiento $establecimiento) : Response
     {
         try {
-            Log::info(
-                "Entrando al adminDesapuntaUser del UsuarioEncolaPolicy",
-                compact("establecimiento", "usuarioEnCola")
+            Log::debug(
+                "Entrando al pasaTurno del UsuarioEnColaPolicy",
+                array(
+                    "userID: " => $user->id,
+                    "establecimiento" => $establecimiento
+                )
             );
 
-            //Si el usuario logueado es admin del establecimiento entonces seguimos
-            if($establecimiento->usuario_administrador === $user->id){
-                if($usuarioEnCola->establecimiento_cola === $establecimiento->id){
-                    $response = true;
+            //Si el usuario es el administrador del establecimiento, entonces sí puede pasar turno
+            if($establecimiento->usuario_administrador == $user->id){
+                $response = Response::allow();
 
-                    Log::info(
-                        "Saliendo del adminDesapuntaUser del UsuarioEncolaPolicy: Status KO",
-                        compact("establecimiento", "usuarioEnCola")
-                    );
-                }
-                else{
-                    $response = false;
-
-                    Log::info(
-                        "Saliendo del adminDesapuntaUser del UsuarioEnColaPolicy: Status KO",
-                        compact("establecimiento", "usuarioEnCola")
-                    );
-                }
+                Log::debug(
+                    "Saliendo del pasaTurno del UsuarioEnColaPolicy: Status OK",
+                    array(
+                        "userID: " => $user->id,
+                        "establecimiento" => $establecimiento
+                    )
+                );
             }else{
-                $response = false;
+                $response = Response::deny();
 
-                Log::info(
-                    "Saliendo del adminDesapuntaUser del UsuarioEnColaPolicy: Status KO",
-                    compact("establecimiento", "usuarioEnCola")
+                Log::debug(
+                    "Saliendo del pasaTurno del UsuarioEnColaPolicy: Status KO",
+                    array(
+                        "userID: " => $user->id,
+                        "establecimiento" => $establecimiento
+                    )
                 );
             }
         }catch(Exception $e){
-            $response = false;
-
             Log::error(
                 $e->getMessage(),
-                compact("establecimiento", "usuarioEnCola")
+                array(
+                    "userID: " => $user->id,
+                    "establecimiento" => $establecimiento
+                )
             );
+
+            $response = Response::deny();
         }
 
         return $response;

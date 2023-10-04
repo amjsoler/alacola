@@ -18,17 +18,33 @@ class UsuarioEnCola extends Model
 
     protected $table = "usuarios_en_cola";
 
-    //Un UserEnCola solo puede referenciar a un usuario
+    ///////////////
+    // Relations //
+    ///////////////
+
+    /**
+     * El usuario asociado al UsuarioEnCola
+     *
+     * @return BelongsTo User
+     */
     public function usuario() : BelongsTo
     {
         return $this->belongsTo(User::class, "usuario_en_cola", "id");
     }
 
-    //Un establecimiento en cola solo puede referenciar a un establecimiento
+    /**
+     * El establecimiento asociado al usuarioEnCola
+     *
+     * @return BelongsTo Establecimiento
+     */
     public function establecimiento() : BelongsTo
     {
         return $this->belongsTo(Establecimiento::class, "establecimiento_cola", "id");
     }
+
+    ///////////////////////
+    // Métodos estáticos //
+    ///////////////////////
 
     /**
      * Función para que un usuario logueado se apunte a la cola de un establecimiento
@@ -37,19 +53,20 @@ class UsuarioEnCola extends Model
      * @param Establecimiento $establecimiento El establecimiento al que se apunta el usuario
      *
      * @return UsuarioEnCola
+     *  0: OK
+     * -1: Excepción
+     * -2: Error al almacenar el usuarioEnCola
      */
     public static function usuarioLogueadoSeApuntaACola(int $userID, Establecimiento $establecimiento)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al usuarioLogueadoSeApuntaACola del Establecimiento",
+            Log::debug("Entrando al usuarioLogueadoSeApuntaACola del Establecimiento",
                 array(
                     "request: " => compact("userID", "establecimiento"),
                 )
@@ -62,19 +79,14 @@ class UsuarioEnCola extends Model
             $usuarioEncolado->momentoestimado = now();
 
             if($usuarioEncolado->save()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $usuarioEncolado;
             }else{
-                $response["status"] = 200;
-                $response["code"] = 0;
-                $response["message"] = "OK";
-                $response["data"] = false;
+                $response["code"] = -2;
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del usuarioLogueadoSeApuntaACola del Establecimiento model",
                 array(
                     "request: " => compact("userID", "establecimiento"),
@@ -83,9 +95,7 @@ class UsuarioEnCola extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -100,49 +110,44 @@ class UsuarioEnCola extends Model
     }
 
     /**
-     * Funci´no para que un usuario se desapunte de la cola de un establecimiento
+     * Función para que un usuario se desapunte de la cola de un establecimiento
      *
      * @param int $userID El id del usuario
      * @param Establecimiento $establecimiento El establecimiento del cual se desapunta
      *
-     * @return string[]
+     * @return bool Si se ha desapuntado o no
      */
     public static function usuarioLogueadoSeDesapuntaDeLaCola(int $userID, Establecimiento $establecimiento)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al usuarioLogueadoSeDesapuntaDeLaCola del UsuarioEnCola",
+            Log::debug("Entrando al usuarioLogueadoSeDesapuntaDeLaCola del UsuarioEnCola",
                 array(
                     "request: " => compact("userID", "establecimiento"),
                 )
             );
 
             //Acción
-            $desencolarResult = UsuarioEnCola::where("usuario_en_cola", $userID)->where("establecimiento_cola", $establecimiento->id)
-                ->where("activo", true)->first();
+            $desencolarResult = UsuarioEnCola::where("usuario_en_cola", $userID)
+                ->where("establecimiento_cola", $establecimiento->id)
+                ->first()
+                ->delete();
 
-            $desencolarResult->activo = false;
-
-            if($desencolarResult->save()){
-                $response["status"] = 200;
+            if($desencolarResult){
                 $response["code"] = 0;
-                $response["message"] = "OK";
-                $response["data"] = $desencolarResult;
+                $response["data"] = true;
             }else{
-                $response["status"] = 200;
-                $response["code"] = 0;
-                $response["message"] = "OK";
+                $response["code"] = -2;
+                $response["data"] = false;
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del usuarioLogueadoSeDesapuntaDeLaCola del UsuarioEnCola",
                 array(
                     "request: " => compact("userID", "establecimiento"),
@@ -151,9 +156,7 @@ class UsuarioEnCola extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -172,40 +175,37 @@ class UsuarioEnCola extends Model
      *
      * @param UsuarioEnCola $usuarioEnCola el usuario a desencolar
      *
-     * @return string[]
+     * @return void
+     *  0: OK
+     * -1: Excepción
+     * -2: No se ha podido desapuntar al usuario
      */
     public static function adminDesapuntaUsuarioDeLaCola(UsuarioEnCola $usuarioEnCola)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al adminDesapuntaUsuarioDeLaCola del UsuarioEnCola",
+            Log::debug("Entrando al adminDesapuntaUsuarioDeLaCola del UsuarioEnCola",
                 array(
                     "request: " => compact("usuarioEnCola"),
                 )
             );
 
             //Acción
-            $usuarioEnCola->activo = false;
+            $actionResult = $usuarioEnCola->delete();
 
-            if($usuarioEnCola->save()){
-                $response["status"] = 200;
+            if($actionResult){
                 $response["code"] = 0;
-                $response["message"] = "OK";
             }else{
-                $response["status"] = 200;
-                $response["code"] = 0;
-                $response["message"] = "OK";
+                $response["code"] = -2;
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del adminDesapuntaUsuarioDeLaCola del UsuarioEnCola",
                 array(
                     "request: " => compact("usuarioEnCola"),
@@ -214,9 +214,7 @@ class UsuarioEnCola extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -230,18 +228,27 @@ class UsuarioEnCola extends Model
         return $response;
     }
 
+    /**
+     * Método para poder apuntar a un usuario anónimo a la cola de un establecimiento
+     *
+     * @param string $nombre_usuario_anonimo El nombre del usuario anónimo que se mostrará
+     * @param int $establecimientoID El establecimiento al que se apunta
+     *
+     * @return UsuarioEnCola
+     *  0: OK
+     * -1: Excepción
+     * -2: No se ha podido almacenar el nuevo UsuarioEnCola
+     */
     public static function usuarioInvitadoSeApunta(string $nombre_usuario_anonimo, int $establecimientoID)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al usuarioInvitadoSeApunta del UsuarioEnCola",
+            Log::debug("Entrando al usuarioInvitadoSeApunta del UsuarioEnCola",
                 array(
                     "request: " => compact("nombre_usuario_anonimo", "establecimientoID"),
                 )
@@ -253,18 +260,14 @@ class UsuarioEnCola extends Model
             $usuarioEnCola->establecimiento_cola = $establecimientoID;
 
             if($usuarioEnCola->save()){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
-                $response["data"] = $usuarioEnCola;
+                $response["data"] = $usuarioEnCola->fresh();
             }else{
-                $response["status"] = 200;
-                $response["code"] = 0;
-                $response["message"] = "OK";
+                $response["code"] = -2;
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del usuarioInvitadoSeApunta del UsuarioEnCola",
                 array(
                     "request: " => compact("nombre_usuario_anonimo", "establecimientoID"),
@@ -273,9 +276,7 @@ class UsuarioEnCola extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -293,8 +294,9 @@ class UsuarioEnCola extends Model
      * Función para desapuntar a un usuario de la cola cuando no está dado de alta como usuario
      *
      * @param int $usuarioEnColaID El usuarioencola a deaspuntar
+     * @param int $establecimientoID El establecimiento en el que buscar
      *
-     * @return string[]
+     * @return  void
      *   0: OK
      *  -1: Excepción
      *  -2: Error al intentar deapuntar al usuarioEnCola
@@ -302,15 +304,13 @@ class UsuarioEnCola extends Model
     public static function usuarioEnColaIDSeDesapunta(int $usuarioEnColaID, int $establecimientoID)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
 
         try{
             //Log de entrada
-            Log::info("Entrando al usuarioEnColaIDSeDesapunta del UsuarioEnCola",
+            Log::debug("Entrando al usuarioEnColaIDSeDesapunta del UsuarioEnCola",
                 array(
                     "request: " => compact("usuarioEnColaID", "establecimientoID"),
                 )
@@ -319,31 +319,17 @@ class UsuarioEnCola extends Model
             //Acción
             $usuarioEnCola = UsuarioEnCola::where("id", $usuarioEnColaID)
                 ->where("establecimiento_cola", $establecimientoID)
-                ->where("activo", true)
                 ->where("usuario_en_cola", null)
                 ->first();
 
-            $usuarioEnCola->activo = false;
-
-            if($usuarioEnCola->save()){
-                $response["status"] = 200;
+            if($usuarioEnCola->delete()){
                 $response["code"] = 0;
-                $response["message"] = "OK";
             }else{
-                $response["status"] = 400;
                 $response["code"] = -2;
-                $response["message"] = "KO";
-
-                Log::error("No se debería haber podido llegar hasta aquí, el validador tendría que haber capado antes",
-                    array(
-                        "request: " => compact("usuarioEnColaID", "establecimientoID"),
-                        "response: " => $response
-                    )
-                );
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del usuarioEnColaIDSeDesapunta del UsuarioEnCola",
                 array(
                     "request: " => compact("usuarioEnColaID", "establecimientoID"),
@@ -352,14 +338,70 @@ class UsuarioEnCola extends Model
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error(
                 $e->getMessage(),
                 array(
                     "request: " => compact("usuarioEnColaID", "establecimientoID"),
+                    "response: " => $response
+                )
+            );
+        }
+
+        return $response;
+    }
+
+    /**
+     * Método para pasar turno en la cola de un establecimiento
+     *
+     * @param Establecimiento $establecimiento El establecimiento
+     *
+     * @return UsuarioEnCola El UsuarioEnCola desencolado
+     */
+    public static function adminPasaTurno(Establecimiento $establecimiento)
+    {
+        $response = [
+            "code" => "",
+            "data" => ""
+        ];
+
+        try{
+            //Log de entrada
+            Log::debug("Entrando al adminPasaTurno del UsuarioEnCola",
+                array(
+                    "request: " => compact("establecimiento"),
+                )
+            );
+
+            //Acción
+            $usuarioEnCola = $establecimiento->usuariosEncolados()
+                ->orderBy("momentoestimado", "asc")
+                ->first();
+
+            if($usuarioEnCola->delete()){
+                $response["code"] = 0;
+                $response["data"] = $usuarioEnCola;
+            }else{
+                $response["code"] = -2;
+            }
+
+            //Log de salida
+            Log::debug(
+                "Saliendo del adminPasaTurno del UsuarioEnCola",
+                array(
+                    "request: " => compact("establecimiento"),
+                    "response: " => $response
+                )
+            );
+        }
+        catch(Exception $e){
+            $response["code"] = -1;
+
+            Log::error(
+                $e->getMessage(),
+                array(
+                    "request: " => compact("establecimiento"),
                     "response: " => $response
                 )
             );

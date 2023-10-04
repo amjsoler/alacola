@@ -20,6 +20,10 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
 
+    protected $primaryKey = "id";
+
+    protected $table = "users";
+
     /**
      * The attributes that are mass assignable.
      *
@@ -61,25 +65,41 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+    ///////////////
+    // Relations //
+    ///////////////
+
+    /**
+     * Devuelve un array de EstablecimientoFavorito que le gusta al usuario
+     *
+     * @return HasMany EstablecimientoFavorito
+     */
     public function establecimientosGustados() : HasMany
     {
         return $this->hasMany(EstablecimientoFavorito::class, "usuario_id", "id");
     }
 
+    /**
+     * Establecimientos que administra el usuario
+     *
+     * @return HasMany Establecimiento[]
+     */
     public function establecimientosAdministrados() : HasMany
     {
         return $this->hasMany(Establecimiento::class, "usuario_administrador", "id");
     }
 
+    ///////////////////////
+    // Métodos estáticos //
+    ///////////////////////
+
     /**
-     * Función que devuelve true o false según si el usuario tiene como favorito a la empresa pasada como param.
+     * Función que devuelve true o false según si el usuario tiene como favorito al establecimiento pasada como param.
      *
      * @param int $userId El usuario
      * @param Establecimiento $establecimientoId El establecimiento
      *
-     * @return string[] Array de datos con estructura estandar.
-     * El data devolverá un bool según si el establecimiento pertenece a favoritos o no
-     *
+     * @return bool si el usuario tiene como fav al establecimiento o no
      *   0: OK
      *  -1: Excepción en la consulta
      */
@@ -94,8 +114,7 @@ class User extends Authenticatable
             //Log de entrada
             Log::debug("Entrando al elUsuarioTieneAlEstablecimientoComoFavorito de User",
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento")
+                    "request: " => compact("userID", "establecimiento")
                 )
             );
 
@@ -116,8 +135,7 @@ class User extends Authenticatable
             //Log de salida
             Log::debug("Saliendo del elUsuarioTieneAlEstablecimientoComoFavorito de User",
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response: " => $response
                 )
             );
@@ -127,8 +145,7 @@ class User extends Authenticatable
 
             Log::error($e->getMessage(),
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response: " => $response
                 )
             );
@@ -138,12 +155,12 @@ class User extends Authenticatable
     }
 
     /**
-     * FUnción encargada de registrar el me gusta de un usuario sobr eun establecimiento
+     * FUnción encargada de registrar el me gusta de un usuario sobre eun establecimiento
      *
      * @param int $userID El usuario que inicia la acción
      * @param Establecimiento $establecimiento El establecimiento que le gusta
      *
-     * @return string[]
+     * @return EstablecimientoFavorito El establecimientoFavorito creado
      *   0: OK
      *  -1: Excepción
      *  -2: Error a la hora de insertar el registro
@@ -159,8 +176,7 @@ class User extends Authenticatable
             //Log de entrada
             Log::debug("Entrando al aUsuarioLeGustaUnEstablecimiento de User",
                 array(
-                    "userID:" => auth()->user()->id,
-                    "request: " => compact("establecimiento")
+                    "request: " => compact("userID", "establecimiento")
                 )
             );
 
@@ -180,8 +196,7 @@ class User extends Authenticatable
             //Log de salida
             Log::debug("Saliendo del aUsuarioLeGustaUnEstablecimiento de User",
                 array(
-                    "userID:" => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response: " => $response
                 )
             );
@@ -191,8 +206,7 @@ class User extends Authenticatable
 
             Log::error($e->getMessage(),
                 array(
-                    "userID:" => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response: " => $response
                 )
             );
@@ -207,7 +221,7 @@ class User extends Authenticatable
      * @param int $userID El usuario
      * @param Establecimiento $establecimiento El establecimiento
      *
-     * @return string[]
+     * @return void
      *   0: OK
      *  -1: Excepción
      *  -2: Error al realizar el borrado de registros
@@ -223,8 +237,7 @@ class User extends Authenticatable
             //Log de entrada
             Log::debug("Entrando al aUsuarioNoLeGustaUnEstablecimiento de User",
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento")
+                    "request: " => compact("userID", "establecimiento")
                 )
             );
 
@@ -243,8 +256,7 @@ class User extends Authenticatable
             //Log de salida
             Log::debug("Saliendo del aUsuarioNoLeGustaUnEstablecimiento de User",
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response:" => $response
                 )
             );
@@ -254,8 +266,7 @@ class User extends Authenticatable
 
             Log::error($e->getMessage(),
                 array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
+                    "request: " => compact("userID", "establecimiento"),
                     "response:" => $response
                 )
             );
@@ -269,16 +280,14 @@ class User extends Authenticatable
      *
      * @param string $correo El correo a buscar
      *
-     * @return string[]
-     *
-     *   0: OK
-     *  -1: Excepción
+     * @return User
+     *  0: OK
+     * -1: Excepción
+     * -2: No se ha encontrado el usuario
      */
     public static function dameUsuarioDadoCorreo(string $correo)
     {
         $response = [
-            "status" => "",
-            "message" => "",
             "code" => "",
             "data" => ""
         ];
@@ -287,7 +296,7 @@ class User extends Authenticatable
             //Log de entrada
             Log::info("Entrando al dameUsuarioDadoCorreo de User",
                 array(
-                    "request: " => $correo
+                    "request: " => compact("correo")
                 )
             );
 
@@ -295,33 +304,27 @@ class User extends Authenticatable
             $usuario = User::where("email", $correo)->first();
 
             if($usuario){
-                $response["status"] = 200;
                 $response["code"] = 0;
-                $response["message"] = "OK";
                 $response["data"] = $usuario;
             }
             else{
-                $response["status"] = 200;
-                $response["code"] = 0;
-                $response["message"] = "OK";
+                $response["code"] = -2;
             }
 
             //Log de salida
             Log::info("Saliendo del dameUsuarioDadoCorreo de User",
                 array(
-                    "request: " => $correo,
+                    "request: " => compact("correo"),
                     "response: " => $response
                 )
             );
         }
         catch(Exception $e){
-            $response["status"] = 400;
             $response["code"] = -1;
-            $response["message"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
-                    "request: " => $correo,
+                    "request: " => compact("correo"),
                     "response: " => $response
                 )
             );

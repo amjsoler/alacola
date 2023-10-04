@@ -73,14 +73,18 @@ class SearchEstablecimientoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "campobusqueda" => "required"
+            "campobusqueda" => "required|string|max:100"
         ];
     }
 
     public function messages()
     {
         return [
-            'campobusqueda.required' => __("establecimientos.validaciones.campobusquedarequired"),
+            "campobusqueda" => [
+                "required" => "Debes especificar algo con lo que buscar",
+                "string" => "La cadena no es valida ¿Contiene algún caracter extraño?",
+                "max" => "La cadena de búsqueda no puede superar los 100 caracteres"
+            ]
         ];
     }
 }

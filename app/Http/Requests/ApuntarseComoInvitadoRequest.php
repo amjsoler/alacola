@@ -47,7 +47,7 @@ class ApuntarseComoInvitadoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "nombre_usuario_anonimo" => "required"
+            "nombre_usuario_anonimo" => "required|string|max:100"
         ];
     }
 
@@ -55,7 +55,9 @@ class ApuntarseComoInvitadoRequest extends FormRequest
     {
         return [
             'nombre_usuario_anonimo' => [
-                'required' => __("usuariosencola.validaciones.nombreusuarioanonimorequired")
+                'required' => "Debes especificar un nombre de usuario",
+                "string" => "El nombre de usuario no es válido ¿Contiene algún caracter extraño?",
+                "max" => "El nombre de usuario no puede superar los 100 caracteres"
             ]
         ];
     }

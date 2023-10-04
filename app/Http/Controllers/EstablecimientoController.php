@@ -20,16 +20,6 @@ use Illuminate\Support\Facades\Log;
  */
 class EstablecimientoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware([
-            'auth:sanctum',
-            config('jetstream.auth_session'),
-            'verified'])->only([
-                "create", "store", "edit", "update", "destroy"
-        ]);
-    }
-
     /**
      * Listado con buscador de establecimientos
      *
@@ -37,32 +27,33 @@ class EstablecimientoController extends Controller
      *   0: Ok
      * -11: Exception
      */
+    //TODO
     public function index()
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al index de EstablecimientoController");
+            Log::debug("Entrando al index de EstablecimientoController");
 
             //ACCIÓN
             $response["data"] = Establecimiento::all();
             $response["code"] = 0;
             $response["status"] = 200;
-            $response["message"] = "OK";
+            $response["statusText"] = "OK";
 
             //Log de salida
-            Log::info("Saliendo del index del EstablecimientoController");
+            Log::debug("Saliendo del index del EstablecimientoController");
         }
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(), array($response));
         }
@@ -81,18 +72,19 @@ class EstablecimientoController extends Controller
         return $responseAux;
     }
 
+    //TODO
     public function misEstablecimientos()
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al misEstablecimientos de EstablecimientoController",
+            Log::debug("Entrando al misEstablecimientos de EstablecimientoController",
                 array(
                     "userID:" => auth()->user()->id
                 )
@@ -104,17 +96,17 @@ class EstablecimientoController extends Controller
             if($resultEstablecimientos["code"] == 0){
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["message"] = "OK";
+                $response["statusText"] = "OK";
                 $response["data"] = $resultEstablecimientos["data"];
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
             }
 
             //Log de salida
-            Log::info("Saliendo del misEstablecimientos del EstablecimientoController",
+            Log::debug("Saliendo del misEstablecimientos del EstablecimientoController",
                 array(
                     "userID:" => auth()->user()->id,
                     "response:" => $response
@@ -124,7 +116,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
@@ -154,31 +146,32 @@ class EstablecimientoController extends Controller
      *   0: Ok
      * -11: Excepción
      */
+    //TODO
     public function create()
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al create de EstablecimientoController", array("userID:" => auth()->user()->id));
+            Log::debug("Entrando al create de EstablecimientoController", array("userID:" => auth()->user()->id));
 
             //ACCIÓN
             $response["code"] = 0;
             $response["status"] = 200;
-            $response["message"] = "OK";
+            $response["statusText"] = "OK";
 
             //Log de salida
-            Log::info("Saliendo del create del EstablecimientoController", array("userID:" => auth()->user()->id, "response:" => $response));
+            Log::debug("Saliendo del create del EstablecimientoController", array("userID:" => auth()->user()->id, "response:" => $response));
         }
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(), array("userID" => auth()->user()->id, "response:" => $response));
         }
@@ -209,18 +202,19 @@ class EstablecimientoController extends Controller
      *  -13: Error al almacenar el logo
      *  -14: Error al almacenar el nombre del logo en bd
      */
+    //TODO
     public function store(StoreEstablecimientoRequest $request)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al store de establecimientoController",
+            Log::debug("Entrando al store de establecimientoController",
                 array("userID: " =>auth()->user()->id,
                     "request:" => $request->all()));
 
@@ -246,31 +240,31 @@ class EstablecimientoController extends Controller
                         if($statusAlmacenarLogoEnBD["code"] == 0){
                             $response["code"] = 0;
                             $response["status"] = 200;
-                            $response["message"] = "OK";
+                            $response["statusText"] = "OK";
                         }else{
                             $response["code"] = -14;
                             $response["status"] = 400;
-                            $response["message"] = "KO";
+                            $response["statusText"] = "KO";
                         }
                     }else{
                         $response["code"] = -13;
                         $response["status"] = 400;
-                        $response["message"] = "KO";
+                        $response["statusText"] = "KO";
                     }
                 }else{
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["message"] = "OK";
+                    $response["statusText"] = "OK";
                 }
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del store del establecimientoControlador",
                 array("userID:" => auth()->user()->id,
                     "request:" => $request->all(),
@@ -279,7 +273,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(), array("userID:" => auth()->user()->id,
                 "request:" => $request->all(),
@@ -302,20 +296,32 @@ class EstablecimientoController extends Controller
     }
 
 
+    /**
+     * Método que se encarga de devolver los datos del establecimiento junto con los usuarios encolados.
+     * También comprueba si hay sesión, si el usuario está encolado y tiene un favorito
+     *
+     * @param Establecimiento $establecimiento El establecimiento a mostrar
+     *
+     * @return {usuariosEncolados: UsuarioEnCola[], establecimiento: Establecimiento, establecimientoFavorito: bool, usuarioEnCola: bool}
+     *   0: OK
+     * -11: Excepción
+     * -12: No se ha podido leer los usuarios encolados
+     */
     public function show(Establecimiento $establecimiento)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al show del establecimientoscontroller",
+            Log::debug("Entrando al show del establecimientoscontroller",
                 array(
-                    "request:" => $establecimiento)
+                    "request:" => $establecimiento
+                )
             );
 
             //Acción
@@ -330,27 +336,46 @@ class EstablecimientoController extends Controller
                 $usuarioEnCola = false;
 
                 if(auth()->check()){
-                    if(User::elUsuarioTieneAlEstablecimientoComoFavorito(auth()->user()->id, $establecimiento)["data"]){
+                    $usuarioTieneFavoritoResult = User::elUsuarioTieneAlEstablecimientoComoFavorito(auth()->user()->id, $establecimiento);
+                    if($usuarioTieneFavoritoResult["code"] == 0 &&
+                    $usuarioTieneFavoritoResult["data"] == true){
                         $establecimientoFavorito = true;
+                    }else{
+                        //Aquí no se debería llegar
+                        Log:error("la llamada a elUsuarioTieneAlEstablecimientoComoFavorito ha fallado",
+                            array(
+                                "request:" => $establecimiento
+                            )
+                        );
                     }
 
-                    if(Establecimiento::comprobarUsuarioEnCola(auth()->user()->id, $establecimiento)["data"]){
+                    $usuarioEstaEnColaResult = Establecimiento::comprobarUsuarioEnCola(auth()->user()->id, $establecimiento);
+                    if($usuarioEstaEnColaResult["code"] == 0 &&
+                    $usuarioEstaEnColaResult["data"] == true){
                         $usuarioEnCola = true;
+                    }else{
+                        //Aquí no se debería llegar
+                        Log::error("la llamada a comprobarUsuarioEnCola ha fallado",
+                            array(
+                                "request:" => $establecimiento
+                            )
+                        );
                     }
                 }
+
                 $response["data"] = compact(["usuariosEncolados", "establecimiento", "establecimientoFavorito", "usuarioEnCola"]);
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["message"] = "OK";
+                $response["statusText"] = "ok";
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del show del establecimientoControlador",
                 array(
                     "request:" => $establecimiento,
@@ -359,7 +384,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error(
                 $e->getMessage(),
@@ -369,32 +394,22 @@ class EstablecimientoController extends Controller
             ));
         }
 
-        //Montamos el response
-        $responseAux = view("establecimientos.establecimiento")->with("response", $response);
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("establecimientos.showko"));
-        }else{
-            //Respuesta OK
-            //Nada
-        }
-
-        return $responseAux;
+        return response()->json($response["data"], $response["status"]);
     }
 
+    //TODO
     public function buscarEstablecimientosCercanos(SearchEstablecimientoCercanoRequest $request)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al buscarEstablecimientosCercanos del establecimientoscontroller",
+            Log::debug("Entrando al buscarEstablecimientosCercanos del establecimientoscontroller",
                 array(
                     "request:" => $request->all())
             );
@@ -412,16 +427,16 @@ class EstablecimientoController extends Controller
 
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["message"] = "OK";
+                $response["statusText"] = "OK";
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del buscarEstablecimientosCercanos del establecimientoControlador",
                 array(
                     "request:" => $request->all(),
@@ -432,7 +447,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error(
                 $e->getMessage(),
@@ -462,23 +477,23 @@ class EstablecimientoController extends Controller
      *
      * @param SearchEstablecimientoRequest $request La cadena a buscar
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     * @return Establecimiento[] Listado de establecimientos. Incluye count con el # de usuarios encolados
      *   0: OK
      * -11: Escepción
      * -12: Error al buscar el establecimiento
      */
-    public function buscarEstablecimiento(SearchEstablecimientoRequest $request)
+    public function buscarEstablecimientos(SearchEstablecimientoRequest $request)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al buscarEstablecimiento del establecimientoscontroller",
+            Log::debug("Entrando al buscarEstablecimientos del establecimientoscontroller",
                 array(
                     "request:" => $request->all()
                 )
@@ -488,22 +503,20 @@ class EstablecimientoController extends Controller
             $establecimientos = Establecimiento::buscarEstablecimiento($request->campobusqueda);
 
             if($establecimientos["code"] == 0){
-
-                $response["data"]["busqueda"]["resultado"] = $establecimientos["data"];
-                $response["data"]["busqueda"]["cadenaBuscada"] = $request->campobusqueda;
+                $response["data"] = $establecimientos["data"];
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["message"] = "OK";
+                $response["statusText"] = "ok";
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
-            Log::info(
-                "Saliendo del buscarEstablecimiento del establecimientoControlador",
+            Log::debug(
+                "Saliendo del buscarEstablecimientos del establecimientoControlador",
                 array(
                     "request:" => $request->all(),
                     "response:" => $response));
@@ -511,7 +524,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error(
                 $e->getMessage(),
@@ -522,18 +535,7 @@ class EstablecimientoController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = view("establecimientos.listado")->with("response", $response);
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("establecimientos.busquedako"));
-        }else{
-            //Respuesta OK
-            //Nada
-        }
-
-        return $responseAux;
+        return response()->json($response["data"], $response["status"]);
     }
 
     /**
@@ -546,18 +548,19 @@ class EstablecimientoController extends Controller
      * -10: Sin autorización
      * -11: Excepción
      */
+    //TODO
     public function edit(Establecimiento $establecimiento)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al edit de EstablecimientoController",
+            Log::debug("Entrando al edit de EstablecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
                     "request: " => compact("establecimiento")
@@ -567,7 +570,7 @@ class EstablecimientoController extends Controller
             try{
                 $this->authorize("update", $establecimiento);
             }catch(AuthorizationException $e){
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
                 $response["code"] = -10;
                 $response["status"] = 403;
 
@@ -585,11 +588,11 @@ class EstablecimientoController extends Controller
             //ACCIÓN
             $response["code"] = 0;
             $response["status"] = 200;
-            $response["message"] = "OK";
+            $response["statusText"] = "OK";
             $response["data"] = $establecimiento;
 
             //Log de salida
-            Log::info("Saliendo del edit del EstablecimientoController",
+            Log::debug("Saliendo del edit del EstablecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
                     "request: " => compact("establecimiento"),
@@ -600,7 +603,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
@@ -639,18 +642,19 @@ class EstablecimientoController extends Controller
      * -12: Error al actualizar los campos
      * -13: Error al almacenar la nueva ruta del logo
      */
+    //TODO
     public function update(UpdateEstablecimientoRequest $request, Establecimiento $establecimiento)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info(
+            Log::debug(
                 "Entrando a update del EstablecimientosController",
                 array(
                     "userID: " => auth()->user()->id,
@@ -663,11 +667,11 @@ class EstablecimientoController extends Controller
             try{
                 $this->authorize("update", [Establecimiento::class, $establecimiento]);
             }catch(AuthorizationException $e){
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
                 $response["code"] = -10;
                 $response["status"] = 403;
 
-                Log::info($e->getMessage(),
+                Log::debug($e->getMessage(),
                     array(
                         "userID: " => auth()->user()->id,
                         "request: " => $request->all(),
@@ -697,25 +701,25 @@ class EstablecimientoController extends Controller
                     if($respuestaGuardarRutaLogo["code"] == 0){
                         $response["code"] = 0;
                         $response["status"] = 200;
-                        $response["message"] = "OK";
+                        $response["statusText"] = "OK";
                     }else{
                         $response["code"] = -13;
                         $response["status"] = 400;
-                        $response["message"] = "KO";
+                        $response["statusText"] = "KO";
                     }
                 }else{
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["message"] = "OK";
+                    $response["statusText"] = "OK";
                 }
             }else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del update del establecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
@@ -728,7 +732,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
@@ -766,18 +770,19 @@ class EstablecimientoController extends Controller
      * -11: Excepción
      * -12: Error al borrar el establecimiento
      */
+    //TODO
     public function destroy(Establecimiento $establecimiento)
     {
         $response = [
             "status" => "",
             "code" => "",
-            "message" => "",
+            "statusText" => "",
             "data" => []
         ];
 
         try {
             //Log de entrada
-            Log::info("Entrando al destroy de establecimientoController",
+            Log::debug("Entrando al destroy de establecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
                     "request:" => $establecimiento)
@@ -787,7 +792,7 @@ class EstablecimientoController extends Controller
             try{
                 $this->authorize("delete", $establecimiento);
             }catch(AuthorizationException $e){
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
                 $response["code"] = -10;
                 $response["status"] = 403;
 
@@ -809,15 +814,15 @@ class EstablecimientoController extends Controller
             if($resultadoBorradoModelo["code"] == 0){
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["message"] = "OK";
+                $response["statusText"] = "OK";
             }else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["message"] = "KO";
+                $response["statusText"] = "KO";
             }
 
             //Log de salida
-            Log::info(
+            Log::debug(
                 "Saliendo del destroy del establecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
@@ -829,7 +834,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["message"] = "KO";
+            $response["statusText"] = "KO";
 
             Log::error($e->getMessage(),
                 array(
@@ -854,6 +859,7 @@ class EstablecimientoController extends Controller
         return $responseAux;
     }
 
+    //TODO
     public function almacenarLogo($logo, int $establecimientoID)
     {
         return $logo->storeAs("public/establecimientos/" . $establecimientoID . "/images", "logo.". $logo->extension());

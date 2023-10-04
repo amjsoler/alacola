@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('establecimientos', function (Blueprint $table) {
             $table->id();
-            $table->string("nombre", 100);
+            $table->string("nombre", 100)->index();
             $table->string("logo")->nullable();
-            $table->string("direccion", 255)->nullable();
-            $table->string("descripcion", 5000)->nullable();
+            $table->string("direccion", 255)->nullable()->index();
+            $table->string("descripcion", 5000)->nullable()->index();
 
             $table->unsignedBigInteger("usuario_administrador");
             $table->foreign("usuario_administrador")->references("id")->on("users")->restrictOnDelete();
 
+            $table->text('latitud')->nullable();
+            $table->text('longitud')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

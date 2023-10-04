@@ -23,19 +23,19 @@ class UpdateEstablecimientoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::info("Entrando a validación del StoreEstablecimientoRequest", array($this->request->all()));
+        Log::debug("Entrando a validación del StoreEstablecimientoRequest", array($this->request->all()));
     }
 
     protected function failedValidation(Validator $validator)
     {
-        Log::info("Saliendo del validador de StoreEstablecimientoRequest. Status: KO", array($this->request->all()));
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: KO", array($this->request->all()));
 
         parent::failedValidation($validator);
     }
 
     protected function passedValidation()
     {
-        Log::info("Saliendo del validador de StoreEstablecimientoRequest. Status: OK", array($this->request->all()));
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: OK", array($this->request->all()));
 
         parent::passedValidation();
     }
@@ -48,9 +48,12 @@ class UpdateEstablecimientoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required',
-            'logo' =>'',
-            'direccion' => ''
+            'nombre' => 'required|string|max:100',
+            'logo' =>'image|mimes:jpg,png,jpeg|max:2048|max_width=2048,max_height=2048',
+            'direccion' => 'string|max:256',
+            'descripcion' => 'string|max:5000',
+            'latitud' => 'string|max:100',
+            'longitud' => 'string|max:100'
         ];
     }
 
@@ -58,10 +61,33 @@ class UpdateEstablecimientoRequest extends FormRequest
     {
         return [
             'nombre' => [
-                'required' => __("establecimientos.validaciones.updatenombrerequired")
+                'required' => "Debes especificar un nombre de usuario",
+                "string" => "el nombre especificado no es válido ¿Contiene caracteres extraños?",
+                "max" => "El nombre no puede superar los 100 caracteres"
             ],
-            'logo' => [],
-            'direccion' => []
+            'logo' => [
+                "image" => "El archivo debe ser una imagen",
+                "mimes" => "El formato de imagen ha de ser JPG, JPEG o PNG",
+                "max" => "La imagen no puede superer los 2MB",
+                "max_width" => "El ancho de la imagen no puede ser mayor a 2048px",
+                "max_height" => "El alto de la imagen no puede ser mayor a 2048px",
+            ],
+            'direccion' => [
+                "string" => "La dirección no es válida ¿Contiene caracteres extraños?",
+                "max" => "La dirección no puede superar los 256 caracteres"
+            ],
+            "descripcion" => [
+                "string" => "La descripción no es válida ¿Contiene caracteres extraños?",
+                "max" => "La descripción no puede superar los 5000 caracteres"
+            ],
+            "latitud" => [
+                "string" => "La latitud debe ser una cadena válida ¿Contiene caracteres extraños?",
+                "max" => "La latitud no puede superar los 100 caracteres"
+            ],
+            "longitud" => [
+                "string" => "La longitud debe ser una cadena válida ¿Contiene caracteres extraños?",
+                "max" => "La longitud no puede superar los 100 caracteres"
+            ]
         ];
     }
 }
