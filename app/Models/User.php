@@ -68,7 +68,6 @@ class User extends Authenticatable
     ///////////////
     // Relations //
     ///////////////
-
     /**
      * Devuelve un array de EstablecimientoFavorito que le gusta al usuario
      *
@@ -92,6 +91,57 @@ class User extends Authenticatable
     ///////////////////////
     // Métodos estáticos //
     ///////////////////////
+
+    public static function crearNuevoUsuario(string $name, string $email, string $password)
+    {
+        $response = [
+            "code" => "",
+            "data" => ""
+        ];
+
+        try{
+            //Log de entrada
+            Log::debug("Entrando al crearNuevoUsuario de User",
+                array(
+                    "request: " => compact("name", "email", "password")
+                )
+            );
+
+            //Acción
+            $nuevoUsuario = new User();
+            $nuevoUsuario->name = $name;
+            $nuevoUsuario->email = $email;
+            $nuevoUsuario->password = $password;
+
+            if($nuevoUsuario->save()){
+                $response["code"] = 0;
+                $response["data"] = $nuevoUsuario;
+            }
+            else{
+                $response["code"] = -2;
+            }
+
+            //Log de salida
+            Log::debug("Saliendo del registrarNuevoUsuario de User",
+                array(
+                    "request: " => compact("name", "email", "password"),
+                    "response: " => $response
+                )
+            );
+        }
+        catch(Exception $e){
+            $response["code"] = -1;
+
+            Log::error($e->getMessage(),
+                array(
+                    "request: " => compact("name", "email", "password"),
+                    "response: " => $response
+                )
+            );
+        }
+
+        return $response;
+    }
 
     /**
      * Función que devuelve true o false según si el usuario tiene como favorito al establecimiento pasada como param.
@@ -294,7 +344,7 @@ class User extends Authenticatable
 
         try{
             //Log de entrada
-            Log::info("Entrando al dameUsuarioDadoCorreo de User",
+            Log::debug("Entrando al dameUsuarioDadoCorreo de User",
                 array(
                     "request: " => compact("correo")
                 )
@@ -312,7 +362,7 @@ class User extends Authenticatable
             }
 
             //Log de salida
-            Log::info("Saliendo del dameUsuarioDadoCorreo de User",
+            Log::debug("Saliendo del dameUsuarioDadoCorreo de User",
                 array(
                     "request: " => compact("correo"),
                     "response: " => $response

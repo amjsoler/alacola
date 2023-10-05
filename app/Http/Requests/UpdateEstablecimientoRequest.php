@@ -49,7 +49,7 @@ class UpdateEstablecimientoRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string|max:100',
-            'logo' =>'image|mimes:jpg,png,jpeg|max:2048|max_width=2048,max_height=2048',
+            'logo' =>'mimes:jpg,png,jpeg|max:2048|dimensions:max_width=2048,max_height=2048',
             'direccion' => 'string|max:256',
             'descripcion' => 'string|max:5000',
             'latitud' => 'string|max:100',
@@ -61,16 +61,14 @@ class UpdateEstablecimientoRequest extends FormRequest
     {
         return [
             'nombre' => [
-                'required' => "Debes especificar un nombre de usuario",
+                'required' => "Debes especificar un nombre para el establecimiento",
                 "string" => "el nombre especificado no es válido ¿Contiene caracteres extraños?",
                 "max" => "El nombre no puede superar los 100 caracteres"
             ],
             'logo' => [
-                "image" => "El archivo debe ser una imagen",
                 "mimes" => "El formato de imagen ha de ser JPG, JPEG o PNG",
                 "max" => "La imagen no puede superer los 2MB",
-                "max_width" => "El ancho de la imagen no puede ser mayor a 2048px",
-                "max_height" => "El alto de la imagen no puede ser mayor a 2048px",
+                "dimensions" => "El ancho y el alto de la imagen no puede ser mayor a 2048px",
             ],
             'direccion' => [
                 "string" => "La dirección no es válida ¿Contiene caracteres extraños?",

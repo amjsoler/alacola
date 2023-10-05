@@ -12,6 +12,7 @@ use Exception;
 use http\Env\Request;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Log;
+use function PHPUnit\Framework\isEmpty;
 
 /**
  * Controlador encargado de la gestión de establecimientos.
@@ -200,9 +201,8 @@ class EstablecimientoController extends Controller
      *  -11: Excepción
      *  -12: Error al almacenar el establecimiento
      *  -13: Error al almacenar el logo
-     *  -14: Error al almacenar el nombre del logo en bd
+     *  -14: Error al almacenar la ruta del logo en bd
      */
-    //TODO
     public function store(StoreEstablecimientoRequest $request)
     {
         $response = [
@@ -215,8 +215,11 @@ class EstablecimientoController extends Controller
         try {
             //Log de entrada
             Log::debug("Entrando al store de establecimientoController",
-                array("userID: " =>auth()->user()->id,
-                    "request:" => $request->all()));
+                array(
+                    "userID: " =>auth()->user()->id,
+                    "request:" => $request->all()
+                )
+            );
 
             //Creamos el establecimiento
             $respuestaModelo = Establecimiento::crearEstablecimiento(
@@ -231,68 +234,70 @@ class EstablecimientoController extends Controller
             if($respuestaModelo["code"] == 0){
                 //Se ha almacenado correctamente el nuevo establecimiento, pasando a almacenar el logo si lo hay
                 if($request->file("logo")){
-                    $statusArchivo = $this->almacenarLogo($request->file("logo"), $respuestaModelo["data"]["id"]);
+                    $rutaLogo = $this->almacenarLogo($request->file("logo"), $respuestaModelo["data"]["id"]);
 
-                    if($statusArchivo !== false){
+                    if(!empty($rutaLogo)){
                         //Ahora guardo el logo en la base de datos
-                        $statusAlmacenarLogoEnBD = Establecimiento::almacenarLogoEstablecimientoEnBD($statusArchivo, $respuestaModelo["data"]["id"]);
+                        $statusAlmacenarLogoEnBD = Establecimiento::almacenarLogoEstablecimientoEnBD($rutaLogo, $respuestaModelo["data"]["id"]);
 
                         if($statusAlmacenarLogoEnBD["code"] == 0){
+                            $response["data"] = $respuestaModelo["data"];
+                            $response["data"]->logo = $rutaLogo;
+
                             $response["code"] = 0;
                             $response["status"] = 200;
-                            $response["statusText"] = "OK";
+                            $response["statusText"] = "ok";
                         }else{
                             $response["code"] = -14;
                             $response["status"] = 400;
-                            $response["statusText"] = "KO";
+                            $response["statusText"] = "ko";
                         }
                     }else{
                         $response["code"] = -13;
                         $response["status"] = 400;
-                        $response["statusText"] = "KO";
+                        $response["statusText"] = "ko";
                     }
                 }else{
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["statusText"] = "OK";
+                    $response["statusText"] = "ok";
+                    $response["data"] = $respuestaModelo["data"];
                 }
             }
             else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
             Log::debug(
                 "Saliendo del store del establecimientoControlador",
-                array("userID:" => auth()->user()->id,
+                array(
+                    "userID:" => auth()->user()->id,
                     "request:" => $request->all(),
-                    "response:" => $response));
+                    "response:" => $response
+                )
+            );
         }
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
-            Log::error($e->getMessage(), array("userID:" => auth()->user()->id,
-                "request:" => $request->all(),
-                "response:" => $response
-                ));
+            Log::error($e->getMessage(),
+                array(
+                    "userID:" => auth()->user()->id,
+                    "request:" => $request->all(),
+                    "response:" => $response
+                )
+            );
         }
 
-        //Montamos el response
-        $responseAux = null;
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux = view("establecimientos.createandedit")->with("ko", __("establecimientos.storeko"));
-        }else{
-            //Respuesta OK
-            $responseAux = redirect(route("establecimientos.show", $respuestaModelo["data"]->id))->with("ok", __("establecimientos.storeok"));
-        }
-
-        return $responseAux;
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
     }
 
 
@@ -539,110 +544,18 @@ class EstablecimientoController extends Controller
     }
 
     /**
-     * Función para mostrar el formulario de edición de establecimiento
-     *
-     * @param Establecimiento $establecimiento El establecimiento a editar
-     *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     *   0: OK
-     * -10: Sin autorización
-     * -11: Excepción
-     */
-    //TODO
-    public function edit(Establecimiento $establecimiento)
-    {
-        $response = [
-            "status" => "",
-            "code" => "",
-            "statusText" => "",
-            "data" => []
-        ];
-
-        try {
-            //Log de entrada
-            Log::debug("Entrando al edit de EstablecimientoController",
-                array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento")
-                )
-            );
-
-            try{
-                $this->authorize("update", $establecimiento);
-            }catch(AuthorizationException $e){
-                $response["statusText"] = "KO";
-                $response["code"] = -10;
-                $response["status"] = 403;
-
-                Log::error($e->getMessage(),
-                    array(
-                        "userID: " => auth()->user()->id,
-                        "request: " => compact("establecimiento"),
-                        "response: " => $response
-                    )
-                );
-
-                return redirect(route("noautorizado"));
-            }
-
-            //ACCIÓN
-            $response["code"] = 0;
-            $response["status"] = 200;
-            $response["statusText"] = "OK";
-            $response["data"] = $establecimiento;
-
-            //Log de salida
-            Log::debug("Saliendo del edit del EstablecimientoController",
-                array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
-                    "response: " => $response
-                )
-            );
-        }
-        catch(Exception $e){
-            $response["code"] = -11;
-            $response["status"] = 400;
-            $response["statusText"] = "KO";
-
-            Log::error($e->getMessage(),
-                array(
-                    "userID: " => auth()->user()->id,
-                    "request: " => compact("establecimiento"),
-                    "response: " => $response
-                )
-            );
-        }
-
-        //Montamos el response
-        $responseAux = view("establecimientos.createandedit")->with(compact("response"))->with("update", "update");
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("establecimientos.editko"));
-        }else{
-            //Respuesta OK
-            //Nada
-        }
-
-        return $responseAux;
-    }
-
-    /**
      * FUnción para actualizar un establecimiento
      *
      * @param UpdateEstablecimientoRequest $request Los nuevos campos del establecimiento
      * @param Establecimiento $establecimiento El establecimiento a modificar
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return Establecimiento El establecimiento con los campos actualizados
      *
      *   0: OK
-     * -10: Sin autorización
      * -11: Excepción
      * -12: Error al actualizar los campos
      * -13: Error al almacenar la nueva ruta del logo
      */
-    //TODO
     public function update(UpdateEstablecimientoRequest $request, Establecimiento $establecimiento)
     {
         $response = [
@@ -663,25 +576,6 @@ class EstablecimientoController extends Controller
                 )
             );
 
-            //¿Puede el usuario logueado realizar esta acción?
-            try{
-                $this->authorize("update", [Establecimiento::class, $establecimiento]);
-            }catch(AuthorizationException $e){
-                $response["statusText"] = "KO";
-                $response["code"] = -10;
-                $response["status"] = 403;
-
-                Log::debug($e->getMessage(),
-                    array(
-                        "userID: " => auth()->user()->id,
-                        "request: " => $request->all(),
-                        "establecimiento: " => $establecimiento
-                    )
-                );
-
-                return redirect(route("noautorizado"));
-            }
-
             //ACCIÓN
             $respuestaUpdate = Establecimiento::updateEstablecimiento(
                 $establecimiento,
@@ -696,26 +590,35 @@ class EstablecimientoController extends Controller
                 if(!empty($request->file("logo"))){
                     $nuevaRutaLogo = $this->almacenarLogo($request->file("logo"), $establecimiento->id);
 
-                    $respuestaGuardarRutaLogo = Establecimiento::almacenarLogoEstablecimientoEnBD($nuevaRutaLogo, $establecimiento->id);
+                    if($nuevaRutaLogo){
+                        $respuestaGuardarRutaLogo = Establecimiento::almacenarLogoEstablecimientoEnBD($nuevaRutaLogo, $establecimiento->id);
 
-                    if($respuestaGuardarRutaLogo["code"] == 0){
-                        $response["code"] = 0;
-                        $response["status"] = 200;
-                        $response["statusText"] = "OK";
+                        if($respuestaGuardarRutaLogo["code"] == 0){
+                            $respuestaUpdate["data"]->logo = $nuevaRutaLogo;
+                            $response["code"] = 0;
+                            $response["status"] = 200;
+                            $response["statusText"] = "ok";
+                            $response["data"] = $respuestaUpdate["data"];
+                        }else{
+                            $response["code"] = -14;
+                            $response["status"] = 400;
+                            $response["statusText"] = "ko";
+                        }
                     }else{
                         $response["code"] = -13;
                         $response["status"] = 400;
-                        $response["statusText"] = "KO";
+                        $response["statusText"] = "ko";
                     }
                 }else{
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["statusText"] = "OK";
+                    $response["statusText"] = "ok";
+                    $response["data"] = $respuestaUpdate["data"];
                 }
             }else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
@@ -723,8 +626,7 @@ class EstablecimientoController extends Controller
                 "Saliendo del update del establecimientoController",
                 array(
                     "userID: " => auth()->user()->id,
-                    "request: " => $request->all(),
-                    "establecimiento: " => $establecimiento,
+                    "request: " => ["nuevosCampos: " => $request->all(), "establecimiento: " => $establecimiento],
                     "response: " => $response
                 )
             );
@@ -732,30 +634,18 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error($e->getMessage(),
                 array(
                     "userID: " => auth()->user()->id,
-                    "request: " => $request->all(),
-                    "establecimiento: " => $establecimiento,
+                    "request: " => ["nuevosCampos: " => $request->all(), "establecimiento: " => $establecimiento],
                     "response: " => $response
                 )
             );
         }
 
-        //Montamos el response
-        $responseAux = null;
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux = back()->withInput()->with("ko", __("establecimientos.updateko"));
-        }else{
-            //Respuesta OK
-            $responseAux = redirect(route("establecimientos.show", $establecimiento->id))->with("ok", __("establecimientos.updateok"));
-        }
-
-        return $responseAux;
+        return response()->json($response["data"], $response["status"]);
 
     }
 
@@ -764,13 +654,11 @@ class EstablecimientoController extends Controller
      *
      * @param Establecimiento $establecimiento El establecimiento a borrar
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return void
      *   0: OK
-     * -10: Acción no autorizada para el usuario logueado
      * -11: Excepción
      * -12: Error al borrar el establecimiento
      */
-    //TODO
     public function destroy(Establecimiento $establecimiento)
     {
         $response = [
@@ -788,37 +676,17 @@ class EstablecimientoController extends Controller
                     "request:" => $establecimiento)
             );
 
-            //¿Puede el usuario logueado realizar esta acción?
-            try{
-                $this->authorize("delete", $establecimiento);
-            }catch(AuthorizationException $e){
-                $response["statusText"] = "KO";
-                $response["code"] = -10;
-                $response["status"] = 403;
-
-                Log::error(
-                    $e->getMessage(),
-                    array(
-                        "userID: " => auth()->user()->id,
-                        "request: " => compact("establecimiento"),
-                        "response: " => $response
-                    )
-                );
-
-                return redirect(route("noautorizado"));
-            }
-
             //ACCIÓN
             $resultadoBorradoModelo = Establecimiento::eliminarEstablecimiento($establecimiento);
 
             if($resultadoBorradoModelo["code"] == 0){
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["statusText"] = "OK";
+                $response["statusText"] = "ok";
             }else{
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
@@ -834,7 +702,7 @@ class EstablecimientoController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error($e->getMessage(),
                 array(
@@ -845,23 +713,27 @@ class EstablecimientoController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = null;
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux = back()->with("ko", __("establecimientos.destroyko"));
-        }else{
-            //Respuesta OK
-            $responseAux = redirect(route("establecimientos.index"))->with("ok", __("establecimientos.destroyok"));
-        }
-
-        return $responseAux;
+        return response()->json([], $response["status"]);
     }
 
-    //TODO
+    /**
+     * Función encargada de almacenar el logo pasado por parámetros en el storage
+     *
+     * @param file $logo El logo a almacenar
+     * @param int $establecimientoID El establecimiento
+     *
+     * @return string|null
+     */
     public function almacenarLogo($logo, int $establecimientoID)
     {
-        return $logo->storeAs("public/establecimientos/" . $establecimientoID . "/images", "logo.". $logo->extension());
+        $path = null;
+
+        try{
+            $path = $logo->storeAs("public/establecimientos/" . $establecimientoID . "/images", "logo.". $logo->extension());
+        }catch(Exception $e){
+            Log::error($e->getMessage());
+        }
+
+        return $path;
     }
 }

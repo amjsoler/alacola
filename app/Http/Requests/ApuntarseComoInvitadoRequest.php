@@ -23,19 +23,19 @@ class ApuntarseComoInvitadoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::info("Entrando a validación del ApuntarseComoInvitadoRequest", array($this->request->all()));
+        Log::debug("Entrando a validación del ApuntarseComoInvitadoRequest", array($this->request->all()));
     }
 
     protected function failedValidation(Validator $validator)
     {
-        Log::info("Saliendo del validador de ApuntarseComoInvitadoRequest. Status: KO", array($this->request->all()));
+        Log::debug("Saliendo del validador de ApuntarseComoInvitadoRequest. Status: KO", array($this->request->all()));
 
         parent::failedValidation($validator);
     }
 
     protected function passedValidation()
     {
-        Log::info("Saliendo del validador de ApuntarseComoInvitadoRequest. Status: OK", array($this->request->all()));
+        Log::debug("Saliendo del validador de ApuntarseComoInvitadoRequest. Status: OK", array($this->request->all()));
 
         parent::passedValidation();
     }

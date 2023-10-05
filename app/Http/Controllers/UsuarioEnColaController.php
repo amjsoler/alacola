@@ -29,7 +29,6 @@ class UsuarioEnColaController extends Controller
      * -12: El usuario ya estaba encolado de forma activa en el establecimiento
      * -13: Error al guardar en BD el modelo
      */
-    //TODO
     public function encolar(Establecimiento $establecimiento)
     {
         $response = [
@@ -41,7 +40,7 @@ class UsuarioEnColaController extends Controller
 
         try {
             //Log de entrada
-            Log::debug("Entrando al encolar  de UsuarioEnColaController",
+            Log::debug("Entrando al encolar de UsuarioEnColaController",
                 array(
                     "userID: " => auth()->user()->id,
                     "request: " => $establecimiento)
@@ -59,11 +58,12 @@ class UsuarioEnColaController extends Controller
                 if($apuntarseResult["code"] == 0){
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["statusText"] = "OK";
+                    $response["statusText"] = "ok";
+                    $response["data"] = $apuntarseResult["data"];
                 }else{
                     $response["code"] = -13;
                     $response["status"] = 400;
-                    $response["statusText"] = "KO";
+                    $response["statusText"] = "ko";
                 }
             }
             else{
@@ -77,7 +77,7 @@ class UsuarioEnColaController extends Controller
 
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
             }
 
             //Log de salida
@@ -93,7 +93,7 @@ class UsuarioEnColaController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error($e->getMessage(),
                 array(
@@ -104,18 +104,10 @@ class UsuarioEnColaController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = redirect()->back();
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __( "usuariosencola.encolarko"));
-        }else{
-            //Respuesta OK
-            $responseAux->with("ok", __( "usuariosencola.encolarok"));
-        }
-
-        return $responseAux;
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
     }
 
     /**
@@ -129,7 +121,6 @@ class UsuarioEnColaController extends Controller
      *  -12: El usuario no estaba encolado por lo que no se ha podido desencolar
      *  -13: Fallo en la consulta, no se ha podido eliminar al usuario de la cola del establecimiento
      */
-    //TODO
     public function desencolar(Establecimiento $establecimiento)
     {
         $response = [
@@ -158,7 +149,8 @@ class UsuarioEnColaController extends Controller
                 if($desencolarUsuarioResult["code"] == 0){
                     $response["code"] = 0;
                     $response["status"] = 200;
-                    $response["statusText"] = "OK";
+                    $response["statusText"] = "ok";
+                    $response["data"] = $desencolarUsuarioResult["data"];
 
                     Log::debug("Usuario en cola desencolado correctamente",
                         array(
@@ -169,7 +161,7 @@ class UsuarioEnColaController extends Controller
                 }else{
                     $response["code"] = -13;
                     $response["status"] = 400;
-                    $response["statusText"] = "KO";
+                    $response["statusText"] = "ko";
 
                     Log::debug("No se ha podido quitar al usuario encolado de la cola",
                         array(
@@ -182,12 +174,13 @@ class UsuarioEnColaController extends Controller
                 //Error porque no está encolado en el establecimiento
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
 
                 Log::error("El usuario no debería haber llegado al desencolar si no está encolado",
                     array(
                         "userID: " => auth()->user(),
-                        "request: " => $establecimiento
+                        "request: " => $establecimiento,
+                        "response: " => $response
                     )
                 );
             }
@@ -200,28 +193,21 @@ class UsuarioEnColaController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error($e->getMessage(),
                 array(
                     "userID: " => auth()->user(),
-                    "request: " => $establecimiento
+                    "request: " => $establecimiento,
+                    "response:" => $response
                 )
             );
         }
 
-        //Montamos el response
-        $responseAux = back();
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("usuariosencola.desencolarko"));
-        }else{
-            //Respuesta OK
-            $responseAux->with("ok", __("usuariosencola.desencolarok"));
-        }
-
-        return $responseAux;
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
     }
 
     /**

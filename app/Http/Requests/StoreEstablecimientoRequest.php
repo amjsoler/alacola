@@ -25,7 +25,7 @@ class StoreEstablecimientoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::info("Entrando a validación del StoreEstablecimientoRequest", array("userID:" => auth()->user()->id,
+        Log::debug("Entrando a validación del StoreEstablecimientoRequest", array("userID:" => auth()->user()->id,
             "request:" => $this->request->all()));
     }
 
@@ -40,7 +40,7 @@ class StoreEstablecimientoRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        Log::info("Saliendo del validador de StoreEstablecimientoRequest. Status: KO", array("userID:" => auth()->user()->id,
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: KO", array("userID:" => auth()->user()->id,
             "request:" => $this->request->all()));
 
         parent::failedValidation($validator);
@@ -52,7 +52,7 @@ class StoreEstablecimientoRequest extends FormRequest
      */
     protected function passedValidation()
     {
-        Log::info("Saliendo del validador de StoreEstablecimientoRequest. Status: OK", array("userID:" => auth()->user()->id,
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: OK", array("userID:" => auth()->user()->id,
             "request:" => $this->request->all()));
 
         parent::passedValidation();
@@ -67,7 +67,7 @@ class StoreEstablecimientoRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string|max:100',
-            'logo' =>'image|mimes:jpg,png,jpeg|max:2048|max_width=2048,max_height=2048',
+            'logo' =>'image|mimes:jpg,png,jpeg|max:2048|dimensions:max_width=2048,max_height=2048',
             'direccion' => 'string|max:256',
             'descripcion' => 'string|max:5000',
             'latitud' => 'string|max:100',
@@ -84,7 +84,7 @@ class StoreEstablecimientoRequest extends FormRequest
     {
         return [
             'nombre' => [
-                'required' => "Debes especificar un nombre de usuario",
+                'required' => "Debes especificar un nombre para el establecimiento",
                 "string" => "el nombre especificado no es válido ¿Contiene caracteres extraños?",
                 "max" => "El nombre no puede superar los 100 caracteres"
             ],

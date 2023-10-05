@@ -14,13 +14,12 @@ class EstablecimientoFavoritoController extends Controller
     /**
      * Método para mostrar la lista de establecimientos marcados como favoritos del usuario logueado
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     * @return Establecimiento[]
      *
      *   0: OK
      * -11: Excepción
      * -12: Error al leer los establecimientos en la parte del modelo
      */
-    //TODO
     public function establecimientosFavoritos()
     {
         $response = [
@@ -78,16 +77,15 @@ class EstablecimientoFavoritoController extends Controller
     /**
      * Función para poder guardar un establecimiento como favorito
      *
-     * @param Establecimiento $establecimiento El establecimiento a guardar
+     * @param Establecimiento $establecimiento El establecimiento a guardar como favorito
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return EstablecimientoFavorito El modelo EstablecimientoFavorito creado
      *
      *   0: OK
      * -11: Excepción
      * -12: El usuario ya tenía almacenado en me gustas el establecimiento
      * -13: Error al guardar el establecimiento como favorito
      */
-    //TODO
     public function meGustaElEstablecimiento(Establecimiento $establecimiento)
     {
         $response = [
@@ -181,10 +179,9 @@ class EstablecimientoFavoritoController extends Controller
      *
      *   0: OK
      * -11: Excepción
-     * -12: El usuario no tenía como favorita la empresa
-     * -13: Error en el metodo de modelo de eliminación
+     * -12: El usuario no tenía como favorito el establecimiento
+     * -13: Error en el metodo de modelo de desmarcar favorito
      */
-    //TODO
     public function yaNoMeGustaElEstablecimiento(Establecimiento $establecimiento)
     {
         $response = [
@@ -217,7 +214,7 @@ class EstablecimientoFavoritoController extends Controller
                 }else{
                     $response["code"] = -13;
                     $response["status"] = 400;
-                    $response["statusText"] = "KO";
+                    $response["statusText"] = "ko";
 
                     Log::error("Error al borrar el establecimiento de la lista de favoritos del usuario",
                         array(

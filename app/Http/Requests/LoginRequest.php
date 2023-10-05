@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 
-class SearchEstablecimientoRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,7 +23,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::debug("Entrando a validación del SearchEstablecimientoRequest",
+        Log::debug("Entrando a validación del StoreEstablecimientoRequest",
             array(
                 "request:" => $this->request->all()
             )
@@ -41,7 +41,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        Log::debug("Saliendo del validador de SearchEstablecimientoRequest. Status: KO",
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: KO",
             array(
                 "request:" => $this->request->all()
             )
@@ -56,7 +56,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function passedValidation()
     {
-        Log::debug("Saliendo del validador de SearchEstablecimientoRequest. Status: OK",
+        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: OK",
             array(
                 "request:" => $this->request->all()
             )
@@ -68,22 +68,26 @@ class SearchEstablecimientoRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            "campobusqueda" => "required|string|max:100"
+            "email" => "required|email|exists:users,email",
+            "password" => "required"
         ];
     }
 
     public function messages()
     {
         return [
-            "campobusqueda" => [
-                "required" => "Debes especificar algo con lo que buscar",
-                "string" => "La cadena no es valida ¿Contiene algún caracter extraño?",
-                "max" => "La cadena de búsqueda no puede superar los 100 caracteres"
+            "email" => [
+                "required" => "El email no puede estar vacío",
+                "email" => "El email no es valido",
+                "exists" => "El no existe" //TODO Quitar esto de aquí
+            ],
+            "password" => [
+                "required" => "La contraseña no puede estar vacía"
             ]
         ];
     }

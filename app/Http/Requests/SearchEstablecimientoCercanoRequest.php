@@ -23,7 +23,7 @@ class SearchEstablecimientoCercanoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::info("Entrando a validación del SearchEstablecimientoCercanoRequest",
+        Log::debug("Entrando a validación del SearchEstablecimientoCercanoRequest",
             array(
                 "request:" => $this->request->all()
             )
@@ -41,7 +41,7 @@ class SearchEstablecimientoCercanoRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        Log::info("Saliendo del validador de SearchEstablecimientoCercanoRequest. Status: KO",
+        Log::debug("Saliendo del validador de SearchEstablecimientoCercanoRequest. Status: KO",
             array(
                 "request:" => $this->request->all()
             )
@@ -56,7 +56,7 @@ class SearchEstablecimientoCercanoRequest extends FormRequest
      */
     protected function passedValidation()
     {
-        Log::info("Saliendo del validador de SearchEstablecimientoCercanoRequest. Status: OK",
+        Log::debug("Saliendo del validador de SearchEstablecimientoCercanoRequest. Status: OK",
             array(
                 "request:" => $this->request->all()
             )

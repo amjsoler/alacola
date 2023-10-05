@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\NoExisteEmailRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 
-class SearchEstablecimientoRequest extends FormRequest
+class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,7 +24,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::debug("Entrando a validación del SearchEstablecimientoRequest",
+        Log::debug("Entrando a validación del RegisterRequest",
             array(
                 "request:" => $this->request->all()
             )
@@ -41,7 +42,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        Log::debug("Saliendo del validador de SearchEstablecimientoRequest. Status: KO",
+        Log::debug("Saliendo del validador de RegisterRequest. Status: KO",
             array(
                 "request:" => $this->request->all()
             )
@@ -56,7 +57,7 @@ class SearchEstablecimientoRequest extends FormRequest
      */
     protected function passedValidation()
     {
-        Log::debug("Saliendo del validador de SearchEstablecimientoRequest. Status: OK",
+        Log::debug("Saliendo del validador de RegisterRequest. Status: OK",
             array(
                 "request:" => $this->request->all()
             )
@@ -68,23 +69,27 @@ class SearchEstablecimientoRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            "campobusqueda" => "required|string|max:100"
+            "name"=> "required|max:100",
+            "email"=> ["required", "email", new NoExisteEmailRule],
+            "password"=> "required|confirmed",
         ];
     }
 
     public function messages()
     {
         return [
-            "campobusqueda" => [
-                "required" => "Debes especificar algo con lo que buscar",
-                "string" => "La cadena no es valida ¿Contiene algún caracter extraño?",
-                "max" => "La cadena de búsqueda no puede superar los 100 caracteres"
-            ]
+            "name.required" => "El nombre no puede estar vacío",
+            "name.max" => "El nombre no puede superar los 100 caracteres",
+            "email.required" => "El email no puede estar vacío",
+            "email.email" => "El email no es válido",
+            "email.NoExisteEmailRule" => "Este email ya está registrado",
+            "password.required" => "La contraseña no puede estar vacía",
+            "password.confirmed" => "Las contraseñas no coinciden"
         ];
     }
 }
