@@ -15,8 +15,13 @@ use Inertia\Inertia;
 |
 */
 
-/*
 
+
+Route::get("/telescope", function(){
+    dd("HOLA");
+});
+
+/*
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
