@@ -9,10 +9,8 @@ use App\Http\Requests\UpdateEstablecimientoRequest;
 use App\Models\Establecimiento;
 use App\Models\User;
 use Exception;
-use http\Env\Request;
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use function PHPUnit\Framework\isEmpty;
 
 /**
  * Controlador encargado de la gestión de establecimientos.
@@ -312,7 +310,7 @@ class EstablecimientoController extends Controller
      * -11: Excepción
      * -12: No se ha podido leer los usuarios encolados
      */
-    public function show(Establecimiento $establecimiento)
+    public function show(Establecimiento $establecimiento, Request $request)
     {
         $response = [
             "status" => "",
@@ -340,7 +338,7 @@ class EstablecimientoController extends Controller
                 $establecimientoFavorito = false;
                 $usuarioEnCola = false;
 
-                if(auth()->check()){
+                if(auth()->user()){
                     $usuarioTieneFavoritoResult = User::elUsuarioTieneAlEstablecimientoComoFavorito(auth()->user()->id, $establecimiento);
                     if($usuarioTieneFavoritoResult["code"] == 0 &&
                     $usuarioTieneFavoritoResult["data"] == true){
@@ -733,6 +731,9 @@ class EstablecimientoController extends Controller
         }catch(Exception $e){
             Log::error($e->getMessage());
         }
+
+        //Sustituyo el public por el storage para que en el cliente se muestren bien ya que esto será una ruta de la carpeta publica del storage
+        $path = str_replace("public/", "storage/", $path);
 
         return $path;
     }
