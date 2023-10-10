@@ -335,17 +335,20 @@ class EstablecimientoController extends Controller
                 $usuariosEncolados = $usuariosEncolados["data"];
 
                 //Comprobamos si hay sesión, si es así, miramos si el usuario tiene como fav el establecimiento y si está encolado
-                $establecimientoFavorito = false;
-                $usuarioEnCola = false;
+                $establecimientoFavorito = null;
+                $usuarioEnCola = null;
 
                 if(auth()->user()){
                     $usuarioTieneFavoritoResult = User::elUsuarioTieneAlEstablecimientoComoFavorito(auth()->user()->id, $establecimiento);
                     if($usuarioTieneFavoritoResult["code"] == 0 &&
                     $usuarioTieneFavoritoResult["data"] == true){
                         $establecimientoFavorito = true;
+                    }else if($usuarioTieneFavoritoResult["code"] == 0 &&
+                    $usuarioTieneFavoritoResult["data"] == false){
+                        $establecimientoFavorito = false;
                     }else{
                         //Aquí no se debería llegar
-                        Log:error("la llamada a elUsuarioTieneAlEstablecimientoComoFavorito ha fallado",
+                        Log::error("la llamada a elUsuarioTieneAlEstablecimientoComoFavorito ha fallado",
                             array(
                                 "request:" => $establecimiento
                             )
