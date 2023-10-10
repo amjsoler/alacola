@@ -71,7 +71,14 @@ class EstablecimientoController extends Controller
         return $responseAux;
     }
 
-    //TODO
+    /**
+     * Devuelve los establecimientos de un usuario
+     *
+     * @return Establecimiento[] Listado de establecimientos
+     *   0: OK
+     * -11: Excepción
+     * -12: Error al leer los establecimientos del usuario
+     */
     public function misEstablecimientos()
     {
         $response = [
@@ -125,17 +132,7 @@ class EstablecimientoController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = view("establecimientos.mis-establecimientos")->with("response", $response);
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("establecimientos.misestablecimientosko"));
-        }else{
-            //Respuesta OK
-        }
-
-        return $responseAux;
+        return response()->json($response["data"], $response["status"]);
     }
 
     /**

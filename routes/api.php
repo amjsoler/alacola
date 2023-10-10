@@ -30,6 +30,8 @@ Route::group(["middleware" => "auth:sanctum"], function(){
     Route::get("/establecimientos/{establecimiento}/desapuntarse",
     [UsuarioEnColaController::class, "desencolar"]);
 
+    ROute::get("/mis-establecimeintos", [EstablecimientoController::class, "misEstablecimientos"]);
+
     //ESTABLECIMIENTOS con sesión de usuario
     Route::post("/establecimientos",
     [EstablecimientoController::class, "store"]);
