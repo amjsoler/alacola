@@ -334,6 +334,7 @@ class EstablecimientoController extends Controller
                 //Comprobamos si hay sesión, si es así, miramos si el usuario tiene como fav el establecimiento y si está encolado
                 $establecimientoFavorito = null;
                 $usuarioEnCola = null;
+                $userAdmin = null;
 
                 if(auth()->user()){
                     $usuarioTieneFavoritoResult = User::elUsuarioTieneAlEstablecimientoComoFavorito(auth()->user()->id, $establecimiento);
@@ -364,9 +365,15 @@ class EstablecimientoController extends Controller
                             )
                         );
                     }
+
+                    $userAdmin = false;
+
+                    if($this->authorize("delete", $establecimiento)){
+                        $userAdmin = true;
+                    }
                 }
 
-                $response["data"] = compact(["usuariosEncolados", "establecimiento", "establecimientoFavorito", "usuarioEnCola"]);
+                $response["data"] = compact(["establecimiento", "establecimientoFavorito", "usuarioEnCola", "userAdmin","usuariosEncolados"]);
                 $response["code"] = 0;
                 $response["status"] = 200;
                 $response["statusText"] = "ok";
