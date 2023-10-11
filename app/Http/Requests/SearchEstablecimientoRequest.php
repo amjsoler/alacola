@@ -73,7 +73,7 @@ class SearchEstablecimientoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "campobusqueda" => "required|string|max:100"
+            "campobusqueda" => ""
         ];
     }
 

@@ -510,7 +510,7 @@ class EstablecimientoController extends Controller
             );
 
             //Acción
-            $establecimientos = Establecimiento::buscarEstablecimiento($request->campobusqueda);
+            $establecimientos = Establecimiento::buscarEstablecimiento($request->get("campobusqueda"));
 
             if($establecimientos["code"] == 0){
                 $response["data"] = $establecimientos["data"];
