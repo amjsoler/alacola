@@ -354,9 +354,12 @@ class EstablecimientoController extends Controller
                     }
 
                     $usuarioEstaEnColaResult = Establecimiento::comprobarUsuarioEnCola(auth()->user()->id, $establecimiento);
-                    if($usuarioEstaEnColaResult["code"] == 0 &&
-                    $usuarioEstaEnColaResult["data"] == true){
-                        $usuarioEnCola = true;
+                    if($usuarioEstaEnColaResult["code"] == 0){
+                        if($usuarioEstaEnColaResult["data"] == true){
+                            $usuarioEnCola = true;
+                        }else{
+                            $usuarioEnCola = false;
+                        }
                     }else{
                         //Aquí no se debería llegar
                         Log::error("la llamada a comprobarUsuarioEnCola ha fallado",
