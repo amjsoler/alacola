@@ -23,19 +23,19 @@ class UpdateEstablecimientoRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        Log::debug("Entrando a validación del StoreEstablecimientoRequest", array($this->request->all()));
+        Log::debug("Entrando a validación del UpdateEstablecimientoRequest", array($this->request->all()));
     }
 
     protected function failedValidation(Validator $validator)
     {
-        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: KO", array($this->request->all()));
+        Log::debug("Saliendo del validador de UpdateEstablecimientoRequest. Status: KO", array($this->request->all()));
 
         parent::failedValidation($validator);
     }
 
     protected function passedValidation()
     {
-        Log::debug("Saliendo del validador de StoreEstablecimientoRequest. Status: OK", array($this->request->all()));
+        Log::debug("Saliendo del validador de UpdateEstablecimientoRequest. Status: OK", array($this->request->all()));
 
         parent::passedValidation();
     }

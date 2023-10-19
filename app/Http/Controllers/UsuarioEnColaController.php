@@ -222,7 +222,7 @@ class UsuarioEnColaController extends Controller
      * -12: El usuario no estaba encolado
      * -13: No se ha podido guardar en bd el modelo
      */
-    //TODO
+    //TODO:
     public function adminDesapunta(Establecimiento $establecimiento, UsuarioEnCola $usuarioEnCola)
     {
         $response = [
@@ -241,38 +241,18 @@ class UsuarioEnColaController extends Controller
                 )
             );
 
-            //¿Puede el usuario logueado realizar esta acción?
-            try{
-                $this->authorize("adminDesapuntaUser", [$usuarioEnCola, $establecimiento]);
-            }catch(AuthorizationException $e){
-                $response["statusText"] = "KO";
-                $response["code"] = -10;
-                $response["status"] = 403;
-
-                Log::error(
-                    $e->getMessage(),
-                    array(
-                        "userID: " => auth()->user()->id,
-                        "request: " => compact("establecimiento"),
-                        "response: " => $response
-                    )
-                );
-
-                return redirect(route("noautorizado"));
-            }
-
             //Acción
             if(UsuarioEnCola::adminDesapuntaUsuarioDeLaCola($usuarioEnCola)){
                 $response["code"] = 0;
                 $response["status"] = 200;
-                $response["statusText"] = "OK";
+                $response["statusText"] = "ok";
             }else{
                 //No se ha podido desencolar al usuarioEnCola
                 $response["code"] = -12;
                 $response["status"] = 400;
-                $response["statusText"] = "KO";
+                $response["statusText"] = "ko";
 
-                Log::error("El usuario no debería haber llegado al desencolar si no está encolado",
+                Log::error("Error en el método de modelo para borrar al usuario de la cola",
                     array(
                         "userID: " => auth()->user()->id,
                         "request: " => compact("establecimiento", "usuarioEnCola"),
@@ -294,7 +274,7 @@ class UsuarioEnColaController extends Controller
         catch(Exception $e){
             $response["code"] = -11;
             $response["status"] = 400;
-            $response["statusText"] = "KO";
+            $response["statusText"] = "ko";
 
             Log::error($e->getMessage(),
                 array(
@@ -305,18 +285,7 @@ class UsuarioEnColaController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = back();
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("usuariosencola.admindesencolarko"));
-        }else{
-            //Respuesta OK
-            $responseAux->with("ok", __("usuariosencola.admindesencolarok"));
-        }
-
-        return $responseAux;
+        return response()->json("", $response["status"]);
     }
 
     /**

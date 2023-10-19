@@ -18,12 +18,16 @@ Route::post("/register",
 //TODO: Route::get("/verificar-usuario");
 //TODO: Forgot password
 
+Route::get("/verificar-cuenta", [ApiAuthentication::class, "mandarCorreoVerificacionCuenta"])
+->middleware("auth:sanctum");
+
 Route::group(["middleware" => "auth:sanctum"], function(){
     ///// Rutas de usuario /////
     Route::get('/usuario', function () {
         return auth()->user();
     });
 
+    //ESTABLECIMIENTOS con sesión de usuario
     Route::get("/establecimientos/{establecimiento}/apuntarse",
     [UsuarioEnColaController::class, "encolar"]);
 
@@ -32,7 +36,6 @@ Route::group(["middleware" => "auth:sanctum"], function(){
 
     Route::get("/mis-establecimientos", [EstablecimientoController::class, "misEstablecimientos"]);
 
-    //ESTABLECIMIENTOS con sesión de usuario
     Route::post("/establecimientos",
     [EstablecimientoController::class, "store"]);
 
@@ -61,6 +64,9 @@ Route::group(["middleware" => "auth:sanctum"], function(){
         [UsuarioEnColaController::class, "adminPasaTurno"]
     )->middleware("can:delete,establecimiento");
 
+    Route::get("/establecimientos/{establecimiento}/admin-desapunta-usuario/{usuarioEnCola}",
+    [UsuarioEnColaController::class, "adminDesapunta"]
+    )->middleware("can:delete,establecimiento");
     ////////////////////////////////////
 });
 

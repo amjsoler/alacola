@@ -19,6 +19,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use Notifiable;
 
     protected $primaryKey = "id";
 
@@ -375,6 +376,66 @@ class User extends Authenticatable
             Log::error($e->getMessage(),
                 array(
                     "request: " => compact("correo"),
+                    "response: " => $response
+                )
+            );
+        }
+
+        return $response;
+    }
+
+    /**
+     * Método para marcar una cuenta de usuario como verificada
+     *
+     * @param int $userID El id del usuario a verificar
+     *
+     * @return null
+     *  0: OK
+     * -1: Excepción
+     * -2: Error al guardar el usuario
+     *
+     */
+    public static function marcarCuentaVerificada(int $userID)
+    {
+        $response = [
+            "code" => "",
+            "data" => ""
+        ];
+
+        try{
+            //Log de entrada
+            Log::debug("Entrando al marcarCuentaVerificada de User",
+                array(
+                    "request: " => compact("userID")
+                )
+            );
+
+            //Acción
+            $result = User::find($userID);
+
+            $result->email_verified_at = now();
+
+            if($result->save()){
+                $response["code"] = 0;
+            }
+            else{
+                $response["code"] = -2;
+            }
+
+            //Log de salida
+            Log::debug("Saliendo del marcarCuentaVerificada de User",
+                array(
+                    "request: " => compact("userID"),
+                    "response: " => $response
+                )
+            );
+        }
+        catch(Exception $e){
+            $response["code"] = -1;
+
+            Log::error($e->getMessage(),
+                array(
+                    "request: " => compact("userID"),
                     "response: " => $response
                 )
             );

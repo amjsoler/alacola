@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\web\Authentication;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ use Inertia\Inertia;
 Route::get("/telescope", function(){
     dd("HOLA");
 });
+
+Route::get('/verificar-cuenta-usuario/{token}', [Authentication::class, "verificarCuentaConToken"])->name("verificarcuenta");
 
 /*
 Route::get('/', function () {

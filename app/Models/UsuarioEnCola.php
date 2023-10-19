@@ -76,7 +76,6 @@ class UsuarioEnCola extends Model
             $usuarioEncolado = new UsuarioEnCola();
             $usuarioEncolado->usuario_en_cola = $userID;
             $usuarioEncolado->establecimiento_cola = $establecimiento->id;
-            $usuarioEncolado->momentoestimado = now();
 
             if($usuarioEncolado->save()){
                 $response["code"] = 0;

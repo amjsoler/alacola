@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Exceptions\ApiAuthenticationRegisterError;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\AccountVerify;
 use App\Models\User;
+use App\Notifications\VerificarCuenta;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -105,6 +107,7 @@ class ApiAuthentication extends Controller
      * -11: Excepción
      * -12: Error al crear el nuevo usuario en el modelo
      * -13: Error al intentar iniciar sesión
+     * -14: Error al mandar el correo de verificación
      */
     public function register(RegisterRequest $request)
     {
@@ -141,13 +144,24 @@ class ApiAuthentication extends Controller
                     $user["access_token"] = $token;
                     $user["token_type"] = "Bearer";
 
-                    //TODO: Enviar una notificación/correo con el link de verificación
+                    $resultNotificacion = $this->mandarCorreoVerificacionCuenta();
 
-                    $response["data"] = $user;
-                    $response["code"] = 0;
-                    $response["status"] = 200;
-                    $response["statusText"] = "ok";
+                    if($resultNotificacion["code"] == 0){
+                        $response["data"] = $user;
+                        $response["code"] = 0;
+                        $response["status"] = 200;
+                        $response["statusText"] = "ok";
+                    }else{
+                        $response["code"] = -14;
+                        $response["status"] = 400;
+                        $response["statusText"] = "ko";
 
+                        Log::error("Fallo al mandar la notificación de validación al usuario recién registrado",
+                            array(
+                                "request: " => $request->all(),
+                                "response: " => $response)
+                        );
+                    }
                 } else{
                     $response["code"] = -13;
                     $response["status"] = 400;
@@ -155,7 +169,7 @@ class ApiAuthentication extends Controller
 
                     Log::error("Fallo al inciiar sesión con el usuario recién creado, esto no debería fallar",
                     array(
-                        "request: " => $request->all,
+                        "request: " => $request->all(),
                         "response: " => $response)
                     );
                 }
@@ -167,7 +181,7 @@ class ApiAuthentication extends Controller
 
                 Log::error("Fallo al crear el usuario, esto no debería fallar si el validador hace bien su trabajo",
                     array(
-                        "request: " => $request->all,
+                        "request: " => $request->all(),
                         "response: " => $response
                     )
                 );
@@ -189,6 +203,62 @@ class ApiAuthentication extends Controller
             Log::error($e->getMessage(),
                 array(
                     "request: " => $request->all(),
+                    "repsonse: " => $response
+                )
+            );
+        }
+
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
+    }
+
+    public function mandarCorreoVerificacionCuenta()
+    {
+        $response = [
+            "status" => "",
+            "code" => "",
+            "statusText" => "",
+            "data" => []
+        ];
+
+        try{
+            //Log de entrada
+            Log::debug("Entrando al mandarCorreoVerificacionCuenta de ApiAuthentication");
+
+            //Creo el nuevo token
+            $validez = now()->addMinute(env("TIEMPO_VALIDEZ_TOKEN_VERIFICACION_EN_MINUTOS"));
+            $result = AccountVerify::crearTokenDeVerificación(auth()->user()->id, $validez);
+
+            if($result["code"] == 0){
+                //Se ha creado el token correctamente, ahora lo mando por correo
+                $tokenCreado = $result["data"];
+                auth()->user()->notify(new VerificarCuenta($tokenCreado->token));
+
+                $response["code"] = 0;
+                $response["status"] = 200;
+                $response["statusText"] = "ok";
+            }else{
+                $response["code"] = -12;
+                $response["status"] = 400;
+                $response["statusText"] = "ko";
+            }
+
+            //Log de salida
+            Log::debug("Saliendo del mandarCorreoVerificacionCuenta de ApiAuthentication",
+                array(
+                    "response: " => $response
+                )
+            );
+        }
+        catch(Exception $e){
+            $response["code"] = -11;
+            $response["status"] = 400;
+            $response["statusText"] = "ko";
+
+            Log::error($e->getMessage(),
+                array(
                     "repsonse: " => $response
                 )
             );
