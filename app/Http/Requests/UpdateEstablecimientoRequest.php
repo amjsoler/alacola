@@ -52,8 +52,8 @@ class UpdateEstablecimientoRequest extends FormRequest
             'logo' =>'mimes:jpg,png,jpeg|max:2048|dimensions:max_width=2048,max_height=2048',
             'direccion' => 'string|max:256',
             'descripcion' => 'string|max:5000',
-            'latitud' => 'string|max:100',
-            'longitud' => 'string|max:100'
+            'latitud' => 'max:100',
+            'longitud' => 'max:100'
         ];
     }
 
@@ -79,11 +79,9 @@ class UpdateEstablecimientoRequest extends FormRequest
                 "max" => "La descripción no puede superar los 5000 caracteres"
             ],
             "latitud" => [
-                "string" => "La latitud debe ser una cadena válida ¿Contiene caracteres extraños?",
                 "max" => "La latitud no puede superar los 100 caracteres"
             ],
             "longitud" => [
-                "string" => "La longitud debe ser una cadena válida ¿Contiene caracteres extraños?",
                 "max" => "La longitud no puede superar los 100 caracteres"
             ]
         ];
