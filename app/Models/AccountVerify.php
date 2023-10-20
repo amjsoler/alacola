@@ -59,7 +59,7 @@ class AccountVerify extends Model
             //Acción
             $nuevoAccountVerify = new AccountVerify();
             $nuevoAccountVerify->user = $userID;
-            $nuevoAccountVerify->token = Hash::make(now());
+            $nuevoAccountVerify->token = str_replace("/", "", Hash::make(now()));
             $nuevoAccountVerify->valido_hasta = $validez;
 
             if($nuevoAccountVerify->save()){
@@ -124,12 +124,12 @@ class AccountVerify extends Model
             );
 
             //Acción
-            $token = AccountVerify::where("token", "=", $token)
+            $result = AccountVerify::where("token", "=", $token)
                 ->where("valido_hasta", ">", now())
                 ->first();
 
             $response["code"] = 0;
-            $response["data"] = $token;
+            $response["data"] = $result;
 
             //Log de salida
             Log::debug("Saliendo del consultarToken de AccountVerify",

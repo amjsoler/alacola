@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\AccountVerify;
 use App\Models\User;
+use App\Notifications\ResetearContrasena;
 use App\Notifications\VerificarCuenta;
 use Exception;
 use Illuminate\Http\Request;
@@ -214,6 +215,14 @@ class ApiAuthentication extends Controller
         );
     }
 
+    /**
+     * Método para enviar un correo de verificación de cuenta
+     *
+     * @return null
+     *   0: OK
+     * -11: Excepción
+     * -12: Fallo al crear el token de verificación
+     */
     public function mandarCorreoVerificacionCuenta()
     {
         $response = [
@@ -259,6 +268,70 @@ class ApiAuthentication extends Controller
 
             Log::error($e->getMessage(),
                 array(
+                    "repsonse: " => $response
+                )
+            );
+        }
+
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
+    }
+
+    public function resetearContrasena(Request $request)
+    {
+        $response = [
+            "status" => "",
+            "code" => "",
+            "statusText" => "",
+            "data" => []
+        ];
+
+        try{
+            //Log de entrada
+            Log::debug("Entrando al resetearContrasena de ApiAuthentication",
+            array(
+                "request: " => $request->all()
+            ));
+
+            //TODO: Cambiar la siguiente linea
+            $user = User::where("email", $request->get("email"))->first();
+
+            //Creo el nuevo token
+            $validez = now()->addMinute(env("TIEMPO_VALIDEZ_TOKEN_VERIFICACION_EN_MINUTOS"));
+            $result = AccountVerify::crearTokenDeVerificación($user->id, $validez);
+
+            if($result["code"] == 0){
+                //Se ha creado el token correctamente, ahora lo mando por correo
+                $tokenCreado = $result["data"];
+                $user->notify(new ResetearContrasena($tokenCreado->token));
+
+                $response["code"] = 0;
+                $response["status"] = 200;
+                $response["statusText"] = "ok";
+            }else{
+                $response["code"] = -12;
+                $response["status"] = 400;
+                $response["statusText"] = "ko";
+            }
+
+            //Log de salida
+            Log::debug("Saliendo del resetearContrasena de ApiAuthentication",
+                array(
+                    "request: " => $request->all(),
+                    "response: " => $response
+                )
+            );
+        }
+        catch(Exception $e){
+            $response["code"] = -11;
+            $response["status"] = 400;
+            $response["statusText"] = "ko";
+
+            Log::error($e->getMessage(),
+                array(
+                    "request: " => $request->all(),
                     "repsonse: " => $response
                 )
             );

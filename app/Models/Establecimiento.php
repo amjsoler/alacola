@@ -235,7 +235,7 @@ class Establecimiento extends Model
             else{
                 $response["code"] = -2;
 
-                Log::error("Error al crear el buscarEstablecimientosCercanos en crearEstablecimiento del modelo Establecimiento",
+                Log::error("Error al buscarEstablecimientosCercanos del modelo Establecimiento",
                     array(
                         "request: " => compact("latitud", "longitud"),
                         "response: " => $response

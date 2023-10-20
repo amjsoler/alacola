@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GuardarNuevaContrasena;
 use App\Models\AccountVerify;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class Authentication extends Controller
@@ -83,5 +85,24 @@ class Authentication extends Controller
         }
 
         return view("cuentaUsuario/verificarCuenta", compact("response"));
+    }
+
+    public function guardarNuevaContrasena(GuardarNuevaContrasena $request)
+    {
+        //Comprobar token
+        $resultToken = AccountVerify::consultarToken($request->get("token"));
+
+        if($resultToken["data"]){
+            //TODO: Cambiar la siguiente linea
+            $user = User::find($resultToken["data"]->user)->first();
+
+            $user->password = Hash::make($request->get("password"));
+
+            $user->save();
+
+            return "La contraseña se ha cambiado correctamente. Ya puedes cerrar esta ventana y volver a la app";
+        }else{
+
+        }
     }
 }

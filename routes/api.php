@@ -15,17 +15,18 @@ Route::post("/login",
 Route::post("/register",
     [ApiAuthentication::class, "register"]);
 
-//TODO: Route::get("/verificar-usuario");
-//TODO: Forgot password
-
 Route::get("/verificar-cuenta", [ApiAuthentication::class, "mandarCorreoVerificacionCuenta"])
 ->middleware("auth:sanctum");
 
-Route::group(["middleware" => "auth:sanctum"], function(){
+Route::post("/resetear-contrasena", [ApiAuthentication::class, "resetearContrasena"]);
+
+Route::group(["middleware" => ["auth:sanctum", "cuentaVerificada"]], function(){
     ///// Rutas de usuario /////
     Route::get('/usuario', function () {
         return auth()->user();
     });
+
+    Route::post("/guardar-nueva-contrasena", [ApiAuthentication::class, "guardarNuevaContrasena"]);
 
     //ESTABLECIMIENTOS con sesión de usuario
     Route::get("/establecimientos/{establecimiento}/apuntarse",
@@ -77,6 +78,9 @@ Route::group(["middleware" => "auth:sanctum"], function(){
 //Rutas de ESTABLECIMIENTO sin sesión de usuario
 Route::post("establecimientos/buscar",
     [EstablecimientoController::class, "buscarEstablecimientos"]);
+
+Route::post("establecimientos/buscar-cercanos",
+    [EstablecimientoController::class, "buscarEstablecimientosCercanos"]);
 
 Route::get("establecimientos/{establecimiento}",
     [EstablecimientoController::class, "show"]);

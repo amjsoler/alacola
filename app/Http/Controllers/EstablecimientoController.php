@@ -410,7 +410,16 @@ class EstablecimientoController extends Controller
         return response()->json($response["data"], $response["status"]);
     }
 
-    //TODO
+    /**
+     * Método que devuelve los establecimientos en un radio de 10km dadas la latitud y la longitud
+     *
+     * @param SearchEstablecimientoCercanoRequest $request La latitud y longitud sobre las que buscar
+     *
+     * @return Establecimiento[] Una colección de establecimientos que casen con la búsqueda
+     *   0: ok
+     * -11: Excepción
+     * -12: EL modelo no ha devuelto lo esperado
+     */
     public function buscarEstablecimientosCercanos(SearchEstablecimientoCercanoRequest $request)
     {
         $response = [
@@ -435,8 +444,7 @@ class EstablecimientoController extends Controller
 
             if($result["code"] == 0){
 
-                $response["data"]["busqueda"]["resultado"] = $result["data"];
-                $response["data"]["busqueda"]["cadenaBuscada"] = "";
+                $response["data"] = $result["data"];
 
                 $response["code"] = 0;
                 $response["status"] = 200;
@@ -471,18 +479,10 @@ class EstablecimientoController extends Controller
             );
         }
 
-        //Montamos el response
-        $responseAux = view("establecimientos.listado")->with("response", $response);
-
-        if($response["code"] != 0){
-            //Respuesta KO
-            $responseAux->with("ko", __("establecimientos.busquedako"));
-        }else{
-            //Respuesta OK
-            //Nada
-        }
-
-        return $responseAux;
+        return response()->json(
+            $response["data"],
+            $response["status"]
+        );
     }
 
     /**

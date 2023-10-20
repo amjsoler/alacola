@@ -73,8 +73,8 @@ class SearchEstablecimientoCercanoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "latitud" => "required|string|max:100",
-            "longitud" => "required|string|max:100"
+            "latitud" => "required|max:100",
+            "longitud" => "required|max:100"
         ];
     }
 
@@ -83,12 +83,10 @@ class SearchEstablecimientoCercanoRequest extends FormRequest
         return [
             "latitud" => [
                 "requred" => "La latitud no puede estar vacía",
-                "string" => "La latitud no es válida ¿Contiene algún caracter extraño?",
                 "max" => "La latitud no puede superar los 100 caracteres"
             ],
             "longitud" => [
                 "requred" => "La longitud no puede estar vacía",
-                "string" => "La longitud no es válida ¿Contiene algún caracter extraño?",
                 "max" => "La longitud no puede superar los 100 caracteres"
             ]
         ];

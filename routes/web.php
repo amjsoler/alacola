@@ -16,13 +16,13 @@ use Inertia\Inertia;
 |
 */
 
-
-
-Route::get("/telescope", function(){
-    dd("HOLA");
-});
-
 Route::get('/verificar-cuenta-usuario/{token}', [Authentication::class, "verificarCuentaConToken"])->name("verificarcuenta");
+
+Route::get('resetear-contrasena/{token}', function($token){
+    return view("cuentaUsuario/resetearContrasena", compact("token"));
+})->name("resetearContrasena");
+
+Route::post("guardar-nueva-contrasena", [Authentication::class, "guardarNuevaContrasena"])->name("guardarNuevaContrasena");
 
 /*
 Route::get('/', function () {
